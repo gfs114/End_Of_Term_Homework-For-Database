@@ -354,3 +354,6 @@ admin_comment
 | admin_id   | int      |        | 10       | 是       | 否       | 是       | 联合主键，关联 admins   | 管理员编号 |
 | comment_id | int      |        | 10       | 是       | 否       | 是       | 联合主键，关联 comments | 评论编号   |
 
+### 5.3 索引设计
+
+为提高查询效率，系统对各表主键字段自动建立主键索引；对用户表 username、管理员表 admin_account、品牌表 brand_name 等唯一字段建立唯一索引，用于保证数据唯一性；对产品表 category_id、brand_id，评论表 user_id、product_id，产品图片表 product_id，收藏表 user_id、product_id 等外键字段建立普通索引，以提高表连接和条件查询效率。
