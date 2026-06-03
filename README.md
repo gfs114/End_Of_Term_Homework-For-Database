@@ -225,7 +225,7 @@ categories
 | category_id   | int      |        | 10       | 是       | 否       | 否       | 自增             | 分类编号               |
 | category_name | varchar  |        | 50       | 否       | 否       | 否       |                  | 分类名称               |
 | parent_id     | int      |        | 10       | 否       | 是       | 是       | 关联 category_id | 父级分类编号           |
-| description   | varchar  |        | 255      | 否       | 是       | 否       |                  | 分类描述               |
+| description   | text     |        | 255      | 否       | 是       | 否       |                  | 分类描述               |
 | sort_order    | int      | 0      | 10       | 否       | 是       | 否       |                  | 排序号                 |
 | icon          | varchar  |        | 255      | 否       | 是       | 否       |                  | 分类图标               |
 | status        | int      | 1      | 1        | 否       | 否       | 否       |                  | 分类状态，1启用，0禁用 |
@@ -300,7 +300,7 @@ comments
 | comment_id   | int      |        | 10       | 是       | 否       | 否       | 自增       | 评论编号                              |
 | user_id      | int      |        | 10       | 否       | 否       | 是       |            | 用户编号,关联 users中的user_id        |
 | product_id   | int      |        | 10       | 否       | 否       | 是       |            | 产品编号，关联 products中的product_id |
-| content      | varchar  |        | 500      | 否       | 否       | 否       |            | 评论内容                              |
+|              |          |        | 500      | 否       | 否       | 否       |            | 评论内容                              |
 | comment_time | datetime |        |          | 否       | 否       | 否       |            | 评论时间                              |
 | like_count   | int      | 0      | 10       | 否       | 否       | 否       |            | 点赞数                                |
 | reply_count  | int      | 0      | 10       | 否       | 否       | 否       |            | 回复数                                |
@@ -357,3 +357,296 @@ admin_comment
 ### 5.3 索引设计
 
 为提高查询效率，系统对各表主键字段自动建立主键索引；对用户表 username、管理员表 admin_account、品牌表 brand_name 等唯一字段建立唯一索引，用于保证数据唯一性；对产品表 category_id、brand_id，评论表 user_id、product_id，产品图片表 product_id，收藏表 user_id、product_id 等外键字段建立普通索引，以提高表连接和条件查询效率。
+
+ 
+
+## 6.数据库实施
+
+### 6.1 建数据库
+
+```sql
+create database device_choose;
+use device_choose
+```
+
+![image-20260603171228183](README.assets/image-20260603171228183.png)
+
+### 6.2 建表
+
+1. admin表创建
+
+```sql
+create table admin (
+    admin_id int not null comment '管理员编号',
+    admin_account varchar(30) not null comment '管理员账号',
+    admin_password varchar(50) not null comment '管理员密码',
+    email varchar(45) comment '管理员邮箱',
+    role varchar(5) not null comment '管理员权限',
+    status int not null default 1 comment '账号状态，0为禁用，1为启用',
+    primary key (admin_id),
+    unique index uk_admin_account (admin_account)
+) engine=innodb;
+```
+
+![image-20260603200811257](README.assets/image-20260603200811257.png)
+
+2. categories
+
+```sql
+create table categories (
+    category_id int not null auto_increment comment '分类编号',
+    category_name varchar(50) not null comment '分类名称',
+    parent_id int comment '父级分类编号',
+    description varchar(255) comment '分类描述',
+    sort_order int default 0 comment '排序号',
+    icon varchar(255) comment '分类图标',
+    status int not null default 1 comment '分类状态，1启用，0禁用',
+    primary key (category_id),
+    index idx_categories_parent_id (parent_id),
+    foreign key (parent_id) references categories(category_id)
+) engine=innodb;
+```
+
+![image-20260603200825103](README.assets/image-20260603200825103.png)
+
+3. brands表创建
+
+```sql
+create table brands (
+    brand_id int not null auto_increment comment '品牌编号',
+    brand_name varchar(50) not null comment '品牌名称',
+    logo varchar(255) comment '品牌logo',
+    country varchar(50) comment '所属国家',
+    website varchar(255) comment '官方网站',
+    description text comment '品牌介绍',
+    status int not null default 1 comment '品牌状态，1启用，0禁用',
+    primary key (brand_id),
+    unique index uk_brand_name (brand_name)
+) engine=innodb;
+```
+
+![image-20260603200838263](README.assets/image-20260603200838263.png)
+
+4. products表创建
+
+```sql
+create table products (
+    product_id int not null auto_increment comment '产品编号',
+    product_name varchar(100) not null comment '产品名称',
+    category_id int not null comment '分类编号',
+    brand_id int not null comment '品牌编号',
+    price double not null default 0.00 comment '产品价格',
+    description text comment '产品简介',
+    view_count int not null default 0 comment '浏览量',
+    release_time datetime comment '发布时间',
+    status int not null default 1 comment '产品状态',
+    primary key (product_id),
+    index idx_products_category_id (category_id),
+    index idx_products_brand_id (brand_id),
+    check (price >= 0),
+    foreign key (category_id) references categories(category_id),
+    foreign key (brand_id) references brands(brand_id)
+) engine=innodb;
+```
+
+![image-20260603200719874](README.assets/image-20260603200719874.png)
+
+5. product_images表创建
+
+```sql
+create table product_images (
+    image_id int not null auto_increment comment '图片编号',
+    product_id int not null comment '产品编号',
+    image_url varchar(255) not null comment '图片地址',
+    image_name varchar(100) comment '图片名称',
+    image_type varchar(20) comment '图片类型',
+    description text comment '图片描述',
+    is_main int not null default 0 comment '是否主图，0否，1是',
+    upload_time datetime not null comment '上传时间',
+    status int not null default 1 comment '图片状态',
+    primary key (image_id),
+    index idx_product_images_product_id (product_id),
+    foreign key (product_id) references products(product_id)
+) engine=innodb;
+```
+
+![image-20260603200734226](README.assets/image-20260603200734226.png)
+
+6. users表创建
+
+```sql
+create table users (
+    user_id int not null auto_increment comment '用户编号',
+    username varchar(50) not null comment '用户名',
+    password varchar(50) not null comment '密码',
+    phone varchar(11) not null comment '手机号',
+    email varchar(45) comment '邮箱',
+    gender varchar(2) comment '性别',
+    status int not null default 1 comment '用户状态',
+    register_time datetime not null comment '注册时间',
+    primary key (user_id),
+    unique index uk_username (username)
+) engine=innodb;
+```
+
+![image-20260603200755413](README.assets/image-20260603200755413.png)
+
+7. comments表创建
+
+```sql
+create table comments (
+    comment_id int not null auto_increment comment '评论编号',
+    user_id int not null comment '用户编号',
+    product_id int not null comment '产品编号',
+    content varchar(500) not null comment '评论内容',
+    comment_time datetime not null comment '评论时间',
+    like_count int not null default 0 comment '点赞数',
+    reply_count int not null default 0 comment '回复数',
+    status int not null default 1 comment '评论状态',
+    primary key (comment_id),
+    index idx_comments_user_id (user_id),
+    index idx_comments_product_id (product_id),
+    foreign key (user_id) references users(user_id),
+    foreign key (product_id) references products(product_id)
+) engine=innodb;
+```
+
+![image-20260603200348140](README.assets/image-20260603200348140.png)
+
+8. admin_category表创建
+
+```sql
+create table admin_category (
+    admin_id int not null comment '管理员编号',
+    category_id int not null comment '分类编号',
+    primary key (admin_id, category_id),
+    index idx_admin_category_category_id (category_id),
+    foreign key (admin_id) references admin(admin_id),
+    foreign key (category_id) references categories(category_id)
+) engine=innodb;
+```
+
+![image-20260603200416462](README.assets/image-20260603200416462.png)
+
+9. admin_brand表创建
+
+```sql
+create table admin_brand (
+    admin_id int not null comment '管理员编号',
+    brand_id int not null comment '品牌编号',
+    primary key (admin_id, brand_id),
+    index idx_admin_brand_brand_id (brand_id),
+    foreign key (admin_id) references admin(admin_id),
+    foreign key (brand_id) references brands(brand_id)
+) engine=innodb;
+```
+
+![image-20260603200440976](README.assets/image-20260603200440976.png)
+
+10. admin_product表创建
+
+```sql
+create table admin_product (
+    admin_id int not null comment '管理员编号',
+    product_id int not null comment '产品编号',
+    primary key (admin_id, product_id),
+    index idx_admin_product_product_id (product_id),
+    foreign key (admin_id) references admin(admin_id),
+    foreign key (product_id) references products(product_id)
+) engine=innodb;
+```
+
+![image-20260603200542135](README.assets/image-20260603200542135.png)
+
+11. favorites表创建
+
+```sql
+create table favorites (
+    favorite_id int not null comment '收藏编号',
+    user_id int not null comment '用户编号',
+    product_id int not null comment '产品编号',
+    favorite_time datetime not null comment '收藏时间',
+    status int not null default 1 comment '收藏状态',
+    primary key (user_id, product_id),
+    unique index uk_favorite_id (favorite_id),
+    index idx_favorites_product_id (product_id),
+    foreign key (user_id) references users(user_id),
+    foreign key (product_id) references products(product_id)
+) engine=innodb;
+```
+
+![image-20260603200624206](README.assets/image-20260603200624206.png)
+
+12. admin_comment
+
+```sql
+create table admin_comment (
+    admin_id int not null comment '管理员编号',
+    comment_id int not null comment '评论编号',
+    primary key (admin_id, comment_id),
+    index idx_admin_comment_comment_id (comment_id),
+    foreign key (admin_id) references admin(admin_id),
+    foreign key (comment_id) references comments(comment_id)
+) engine=innodb;
+```
+
+!![image-20260603200657745](README.assets/image-20260603200657745.png)
+
+### 6.3 数据装载
+
+6.3.1 加入种类
+
+```sql
+insert into categories (category_name,parent_id,description,sort_order,status)
+values('手机',null,'手机类数码产品',1,1),('电脑',null,'电脑类数码产品',2,1);
+```
+
+![image-20260603201722364](README.assets/image-20260603201722364.png)
+
+6.3.2 添加品牌
+
+```sql
+insert into brands (brand_name, logo, country, website, status)
+values
+('华为','brand_icon/HUAWEI.png','中国','https://consumer.huawei.com/cn/',1),
+('小米','brand_icon/Xiaomi.png','中国','https://www.mi.com/about/index.html',1),
+('OPPO','brand_icon/OPPO.svg','中国','https://www.oppo.com/cn/smartphones/',1),
+('vivo','brand_icon/Vivo.png','中国','https://www.vivo.com.cn/',1),
+('荣耀','brand_icon/Honor.png','中国','https://www.honor.com/cn/phones/',1),
+('魅族','brand_icon/MEIZU.png','中国','https://www.meizu.com/index.html',1),
+('中兴','brand_icon/ZTE.png','中国','https://www.ztedevices.com/cn/',1),
+('Apple','brand_icon/Apple.png','美国','https://www.apple.com.cn/',1),
+('三星','brand_icon/Samsung.png','韩国','https://www.samsung.com.cn/',1),
+('联想','brand_icon/Lenovo.png','中国','https://www.lenovo.com.cn/',1),
+('戴尔','brand_icon/Dell.png','美国','https://www.dell.com/zh-cn',1),
+('惠普','brand_icon/HP.png','美国','https://www.hp.com/cn-zh/home.html',1),
+('华硕','brand_icon/Asus.png','中国台湾','https://www.asus.com.cn/',1),
+('宏碁','brand_icon/acer.png','中国台湾','https://www.acer.com.cn/',1),
+('机械革命','brand_icon/MECHREVO.jpg','中国','https://www.mechrevo.com/',1),
+('七彩虹','brand_icon/Colorful.jpg','中国','https://www.colorful.cn/',1),
+('火影','brand_icon/FIREBAT.png','中国','https://www.firebat.com.cn/',1);
+```
+
+![image-20260603204402213](README.assets/image-20260603204402213.png)
+
+6.3.3 插入手机，电脑与对应图片
+
+由于数量过多，故不插入图片与源码
+
+6.3.4 添加用户
+
+```sql
+insert into users
+values(114510,'gin','123456','15860827759','cole36620@gmail.com','男',1,now());
+```
+
+![image-20260603214735572](README.assets/image-20260603214735572.png)
+
+6.3.5 添加管理员账号
+
+```sql
+insert into admin
+values(1,'admin1','123456','3277314262@qq.com','超级管理员',1);
+```
+
+![image-20260603214951695](README.assets/image-20260603214951695.png)
