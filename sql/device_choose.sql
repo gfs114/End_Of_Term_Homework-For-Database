@@ -438,7 +438,207 @@ values
 
 -- 添加用户
 insert into users
-values(114510,'gin','123456','15860827759','cole36620@gmail.com','男',1,now());
+values(114510,'gin','123456','15860827759','cole36620@gmail.com','男',1,now()),
+(114511,'lisa','pass789','13912345678','lisa_wang@qq.com','女',1,now()),
+(114512,'tom_chen','tom2024','15012345678','tomchen@163.com','男',1,now()),
+(114513,'emma_li','emma@123','18612345678','emma.li@gmail.com','女',1,now()),
+(114514,'jack_ma','jack666','13712345678','jackma@outlook.com','男',1,now()),
+(114515,'sophia','soph@2024','15912345678','sophia.z@gmail.com','女',1,now()),
+(114516,'alex_wu','alex1234','13812345678','alexwu@qq.com','男',1,now()),
+(114517,'mia_zhang','mia@pass','18712345678','miazhang@126.com','女',1,now()),
+(114518,'leo_huang','leo2024','13612345678','leo.huang@gmail.com','男',1,now()),
+(114519,'olivia','olivia@1','15212345678','olivia.liu@163.com','女',1,now()),
+(114520,'ryan_zhou','ryan6666','18512345678','ryan.zhou@qq.com','男',1,now()),
+(114521,'luna_he','luna123','15512345678','lunahe@gmail.com','女',0,now()),
+(114522,'ethan_sun','ethan@88','13312345678','ethansun@outlook.com','男',1,now()),
+(114523,'ava_yang','ava2024!','18912345678','ava.yang@126.com','女',1,now()),
+(114524,'noah_lin','noahpass','15112345678','noahlin@gmail.com','男',1,now()),
+(114525,'ella_deng','ella@555','18212345678','elladeng@163.com','女',1,now()),
+(114526,'liam_guo','liam1234','15712345678','liam.guo@qq.com','男',0,now()),
+(114527,'zoe_pan','zoe_pass','13512345678','zoepan@gmail.com','女',1,now()),
+(114528,'mason_shi','mason666','18812345678','masonshi@outlook.com','男',1,now()),
+(114529,'ivy_jiang','ivy@2024','15312345678','ivy.jiang@163.com','女',1,now());
 -- 添加管理员
 insert into admin
-values(1,'admin1','123456','3277314262@qq.com','超级管理员',1);
+values(1,'admin1','123456','3277314262@qq.com','超级管理员',1),
+(2,'admin2','123456','1145144@163.com','普通管理员',1),
+(3,'admin3','123456','zhangwei@qq.com','普通管理员',1),
+(4,'admin4','123456','liqiang@163.com','普通管理员',1),
+(5,'admin5','123456','wangfang@126.com','普通管理员',1),
+(6,'admin6','123456','chenjie@qq.com','普通管理员',1),
+(7,'admin7','123456','yangliu@163.com','普通管理员',1),
+(8,'admin8','123456','huangfei@outlook.com','普通管理员',1),
+(9,'admin9','123456','zhaomin@gmail.com','普通管理员',1),
+(10,'admin10','123456','wuxin@126.com','普通管理员',1),
+(11,'admin11','123456','sunlei@qq.com','普通管理员',1),
+(12,'admin12','123456','maxia@163.com','普通管理员',1),
+(13,'admin13','123456','guojing@outlook.com','普通管理员',1),
+(14,'admin14','123456','linfang@gmail.com','普通管理员',1),
+(15,'admin15','123456','heyun@126.com','普通管理员',1),
+(16,'admin16','123456','liuqiang@qq.com','普通管理员',1),
+(17,'admin17','123456','zhoujie@163.com','普通管理员',1),
+(18,'admin18','123456','xuting@outlook.com','普通管理员',1),
+(19,'admin19','123456','zhenghao@gmail.com','普通管理员',1),
+(20,'admin20','123456','tanwei@126.com','普通管理员',1);
+
+-- 查询索引
+show index from admin;
+show index from admin_brand;
+show index from admin_category;
+show index from admin_comment;
+show index from admin_product;
+show index from brands;
+show index from categories;
+show index from comments;
+show index from favorites;
+show index from product_images;
+show index from products;
+show index from users;
+
+-- 查询用户
+select user_id,username,password,phone,email,gender,status,register_time
+from users
+where username= ? or email=?
+limit 1;
+
+-- 根据user_id查询用户
+select user_id,username,password,phone,email,gender,status,register_time
+from users
+where user_id= ?
+limit 1;
+
+-- 判断用户信息是否有重复
+select user_id,username,phone,email
+from users
+where username=? or phone= ? or email=?
+limit 1;
+
+-- 获取所有用户列表
+select *
+from users
+order by user_id;
+
+-- 创建用户
+insert into users
+values(?,?,?,?,?,now());
+
+-- 更改用户信息
+update users
+set username=?,phone=?,email=?,password=?,status=?,gender=?
+where user_id=?;
+
+-- 重置密码
+update users
+set password=?
+where user_id=?;
+
+-- 更改用户状态
+update users
+set status=?
+where user_id=?;
+
+-- 删除用户
+delete from users
+where user_id=?;
+
+-- 管理员登录
+select * from admin
+where admin_account=?
+limit 1;
+
+-- 根据id查找产品
+select *
+from products
+where product_id = ?
+limit 1;
+
+-- 前台产品列表
+select
+  p.product_id,
+  p.product_name,
+  p.price,
+  p.description,
+  p.view_count,
+  p.status,
+  c.category_id,
+  c.category_name,
+  b.brand_id,
+  b.brand_name,
+  b.logo as brand_logo,
+  pi.image_url
+from products p
+inner join categories c on c.category_id = p.category_id
+inner join brands b on b.brand_id = p.brand_id
+left join (
+  select product_id, min(image_url) as image_url
+  from product_images
+  where is_main = 1 and status = 1
+  group by product_id
+) pi on pi.product_id = p.product_id
+where p.status = 1 and c.status = 1 and b.status = 1
+and (p.product_name like ? or p.description like ? or b.brand_name like ?)
+and p.category_id = ?
+and p.brand_id in (?, ?, ...)
+and p.price >= ?
+and p.price <= ?
+order by p.view_count desc, p.product_id asc
+
+-- 后台产品列表
+select
+  p.product_id,
+  p.product_name,
+  p.price,
+  p.description,
+  p.view_count,
+  p.status,
+  c.category_id,
+  c.category_name,
+  b.brand_id,
+  b.brand_name,
+  b.logo as brand_logo,
+  pi.image_url
+from products p
+inner join categories c on c.category_id = p.category_id
+inner join brands b on b.brand_id = p.brand_id
+left join (
+  select product_id, min(image_url) as image_url
+  from product_images
+  where is_main = 1 and status = 1
+  group by product_id
+) pi on pi.product_id = p.product_id
+where p.category_id = ?
+order by p.product_id asc
+
+-- 新增设备
+insert into products
+ (product_name, category_id, brand_id, price, description, view_count, release_time, status)
+values (?, ?, ?, ?, ?, 0, now(), ?)
+
+-- 完整更新设备信息
+update products
+set product_name = ?, category_id = ?, brand_id = ?, price = ?, description = ?, status = ?
+where product_id = ?
+
+-- 切换启用/禁用状态
+update products set status = ? where product_id = ?
+
+-- 删除设备
+delete from products where product_id = ?
+
+-- 查询分类
+select category_id, category_name, description
+from categories
+where status = 1
+order by sort_order asc, category_id asc
+
+-- 查询品牌
+select brand_id, brand_name, logo, country
+from brands
+where status = 1
+order by brand_name asc
+
+-- 查询产品图片
+select product_id, min(image_url) as image_url
+from product_images
+where is_main = 1 and status = 1
+group by product_id

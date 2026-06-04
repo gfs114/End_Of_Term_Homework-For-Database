@@ -1,31 +1,19 @@
 <template>
-  <main class="account-page admin-page">
-    <header class="account-topbar">
-      <div>
-        <p>ADMIN CONSOLE</p>
-        <h1>数码产品配置对比系统 · 管理端</h1>
-      </div>
-      <div class="account-actions">
-        <div class="identity">
-          <span>管理员</span>
-          <strong>{{ currentUser.account }}</strong>
-        </div>
-        <el-button icon="SwitchButton" @click="handleLogout">退出管理端</el-button>
-      </div>
-    </header>
-
-    <section class="workspace">
-      <div class="workspace-heading">
+  <main class="admin-users-page">
+    <section class="admin-users-card">
+      <div class="content-heading">
         <div>
-          <p>用户管理</p>
-          <h2>维护用户账号与状态</h2>
-          <span>管理员可以新增、编辑、启用、禁用和删除普通用户。</span>
+          <h1>用户信息</h1>
+          <p>{{ isSuperAdmin ? '维护普通用户账号、状态和基础资料。' : '普通管理员仅可查看用户信息。' }}</p>
         </div>
-        <div class="workspace-commands">
+        <div class="content-commands">
           <el-button icon="Refresh" :loading="loading" @click="fetchUsers">刷新</el-button>
-          <el-button type="primary" icon="Plus" @click="openUserDialog('create')">新增用户</el-button>
+          <el-button v-if="isSuperAdmin" type="primary" icon="Plus" @click="openUserDialog('create')">新增用户</el-button>
         </div>
       </div>
+
+      <el-alert v-if="!isSuperAdmin" class="permission-alert" title="当前为普通管理员账号，用户信息仅支持查看。" type="info" show-icon
+        :closable="false" />
 
       <div class="summary-strip">
         <div>
@@ -55,15 +43,11 @@
           </el-table-column>
           <el-table-column label="状态" width="120">
             <template #default="{ row }">
-              <el-switch
-                v-model="row.status"
-                :active-value="1"
-                :inactive-value="0"
-                @change="handleStatusChange(row)"
-              />
+              <el-switch v-model="row.status" :active-value="1" :inactive-value="0" :disabled="!isSuperAdmin"
+                @change="handleStatusChange(row)" />
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="170" fixed="right">
+          <el-table-column v-if="isSuperAdmin" label="操作" width="170" fixed="right">
             <template #default="{ row }">
               <el-button type="primary" link icon="Edit" @click="openUserDialog('edit', row)">编辑</el-button>
               <el-button type="danger" link icon="Delete" @click="handleDeleteUser(row)">删除</el-button>
@@ -73,20 +57,9 @@
       </div>
     </section>
 
-    <el-dialog
-      v-model="userDialogVisible"
-      :title="dialogMode === 'create' ? '新增用户' : '编辑用户'"
-      width="min(560px, 92vw)"
-      :close-on-click-modal="false"
-      @closed="resetUserDialog"
-    >
-      <el-form
-        ref="userForm"
-        :model="userForm"
-        :rules="userRules"
-        label-position="top"
-        class="dialog-form"
-      >
+    <el-dialog v-model="userDialogVisible" :title="dialogMode === 'create' ? '新增用户' : '编辑用户'" width="min(560px, 92vw)"
+      :close-on-click-modal="false" @closed="resetUserDialog">
+      <el-form ref="userForm" :model="userForm" :rules="userRules" label-position="top" class="dialog-form">
         <div class="form-grid">
           <el-form-item label="用户名" prop="username">
             <el-input v-model.trim="userForm.username" />
@@ -109,15 +82,11 @@
         </div>
 
         <el-form-item :label="dialogMode === 'create' ? '密码' : '新密码'" prop="password">
-          <el-input
-            v-model="userForm.password"
-            type="password"
-            :placeholder="dialogMode === 'create' ? '请输入密码' : '留空则不修改密码'"
-            show-password
-          />
+          <el-input v-model="userForm.password" type="password"
+            :placeholder="dialogMode === 'create' ? '请输入密码' : '留空则不修改密码'" show-password />
         </el-form-item>
 
-        <el-form-item label="账号状态" prop="status">
+        <el-form-item v-if="dialogMode === 'edit'" label="账号状态" prop="status">
           <el-radio-group v-model="userForm.status">
             <el-radio :value="1">启用</el-radio>
             <el-radio :value="0">禁用</el-radio>
@@ -135,7 +104,7 @@
 
 <script>
 import http from '@/utils/http'
-import { clearAuthSession, getAuthUser } from '@/utils/auth'
+import { getAuthUser } from '@/utils/auth'
 
 function emptyUserForm() {
   return {
@@ -194,6 +163,9 @@ export default {
     }
   },
   computed: {
+    isSuperAdmin() {
+      return this.currentUser.role === '超级管理员'
+    },
     enabledUserCount() {
       return this.users.filter((user) => Number(user.status) === 1).length
     },
@@ -297,11 +269,135 @@ export default {
             this.$message.error(this.getErrorMessage(error, '用户删除失败'))
           }
         })
-    },
-    handleLogout() {
-      clearAuthSession()
-      this.$router.push('/admin-login')
     }
   }
 }
 </script>
+
+<style scoped>
+.admin-users-page {
+  min-height: calc(100vh - 96px);
+}
+
+.admin-users-card {
+  min-height: calc(100vh - 96px);
+  padding: 20px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.content-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #eef0f3;
+}
+
+.permission-alert {
+  margin-bottom: 18px;
+}
+
+.content-heading h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+}
+
+.content-heading p {
+  margin: 7px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.content-commands {
+  display: flex;
+  gap: 10px;
+}
+
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.summary-strip div {
+  padding: 15px 18px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.summary-strip div:last-child {
+  border-right: 0;
+}
+
+.summary-strip span {
+  display: block;
+  margin-bottom: 7px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.summary-strip strong {
+  color: #111827;
+  font-size: 22px;
+}
+
+.table-tool {
+  overflow: hidden;
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+}
+
+.dialog-form {
+  width: 100%;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+}
+
+.dialog-form .el-select {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .admin-users-card {
+    padding: 14px;
+  }
+
+  .content-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .content-commands {
+    width: 100%;
+  }
+
+  .content-commands .el-button {
+    flex: 1;
+  }
+
+  .summary-strip,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-strip div {
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .summary-strip div:last-child {
+    border-bottom: 0;
+  }
+}
+</style>

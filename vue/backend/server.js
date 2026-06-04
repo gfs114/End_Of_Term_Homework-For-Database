@@ -95,6 +95,44 @@ function validateUserInput(input, options = {}) {
   }
 }
 
+function validateProductInput(input) {
+  const name = normalizeText(input.name || input.productName)
+  const categoryId = Number(input.categoryId)
+  const brandId = Number(input.brandId)
+  const price = Number(input.price)
+  const description = normalizeText(input.description)
+  const status = input.status === undefined ? 1 : Number(input.status)
+
+  if (!name || name.length > 100) {
+    throw createHttpError(400, '设备名称不能为空且不能超过 100 个字符')
+  }
+
+  if (!Number.isInteger(categoryId) || categoryId <= 0) {
+    throw createHttpError(400, '请选择设备分类')
+  }
+
+  if (!Number.isInteger(brandId) || brandId <= 0) {
+    throw createHttpError(400, '请选择设备品牌')
+  }
+
+  if (!Number.isFinite(price) || price < 0) {
+    throw createHttpError(400, '设备价格不能小于 0')
+  }
+
+  if (![0, 1].includes(status)) {
+    throw createHttpError(400, '设备状态只能为 0 或 1')
+  }
+
+  return {
+    name,
+    categoryId,
+    brandId,
+    price,
+    description,
+    status
+  }
+}
+
 function publicUser(user, accountType) {
   const result = {
     id: user.user_id,
@@ -155,7 +193,8 @@ function publicProduct(product) {
     brandId: product.brand_id,
     brandName: product.brand_name,
     brandLogo: product.brand_logo || '',
-    imageUrl: product.image_url || ''
+    imageUrl: product.image_url || '',
+    status: Number(product.status)
   }
 }
 
@@ -190,6 +229,15 @@ function createApp(db, options = {}) {
   function requireAdmin(req, res, next) {
     if (req.auth.accountType !== 'ADMIN') {
       next(createHttpError(403, '仅管理员可以执行此操作'))
+      return
+    }
+
+    next()
+  }
+
+  function requireSuperAdmin(req, res, next) {
+    if (req.auth.accountType !== 'ADMIN' || req.auth.role !== '超级管理员') {
+      next(createHttpError(403, '仅超级管理员可以管理用户'))
       return
     }
 
@@ -292,6 +340,19 @@ function createApp(db, options = {}) {
     }
   }
 
+  async function findProductById(productId) {
+    const products = await query(
+      db,
+      `SELECT product_id, product_name, category_id, brand_id, price, description, view_count, status
+       FROM products
+       WHERE product_id = ?
+       LIMIT 1`,
+      [productId]
+    )
+
+    return products[0] || null
+  }
+
   app.get('/health', asyncRoute(async (req, res) => {
     await query(db, 'SELECT 1 AS ok')
     sendSuccess(res, 200, '服务运行正常', { database: 'connected' })
@@ -383,7 +444,6 @@ function createApp(db, options = {}) {
     })
   }))
 
-  // 课程演示接口：仅通过用户名或邮箱重置密码，不适合生产环境。
   app.post('/reset-password', asyncRoute(async (req, res) => {
     const account = normalizeText(req.body.account)
     const password = typeof req.body.password === 'string' ? req.body.password : ''
@@ -484,6 +544,10 @@ function createApp(db, options = {}) {
     const keyword = normalizeText(req.query.keyword)
     const categoryId = Number(req.query.categoryId)
     const brandId = Number(req.query.brandId)
+    const brandIds = normalizeText(req.query.brandIds)
+      .split(',')
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0)
     const minPrice = Number(req.query.minPrice)
     const maxPrice = Number(req.query.maxPrice)
 
@@ -498,7 +562,10 @@ function createApp(db, options = {}) {
       params.push(categoryId)
     }
 
-    if (Number.isInteger(brandId) && brandId > 0) {
+    if (brandIds.length) {
+      conditions.push(`p.brand_id IN (${brandIds.map(() => '?').join(', ')})`)
+      params.push(...brandIds)
+    } else if (Number.isInteger(brandId) && brandId > 0) {
       conditions.push('p.brand_id = ?')
       params.push(brandId)
     }
@@ -527,6 +594,7 @@ function createApp(db, options = {}) {
          p.price,
          p.description,
          p.view_count,
+         p.status,
          c.category_id,
          c.category_name,
          b.brand_id,
@@ -550,6 +618,153 @@ function createApp(db, options = {}) {
     sendSuccess(res, 200, '获取产品列表成功', products.map((product) => publicProduct(product)))
   }))
 
+  app.get('/admin/products', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+    const conditions = []
+    const params = []
+    const categoryId = Number(req.query.categoryId)
+
+    if (Number.isInteger(categoryId) && categoryId > 0) {
+      conditions.push('p.category_id = ?')
+      params.push(categoryId)
+    }
+
+    const products = await query(
+      db,
+      `SELECT
+         p.product_id,
+         p.product_name,
+         p.price,
+         p.description,
+         p.view_count,
+         p.status,
+         c.category_id,
+         c.category_name,
+         b.brand_id,
+         b.brand_name,
+         b.logo AS brand_logo,
+         pi.image_url
+       FROM products p
+       INNER JOIN categories c ON c.category_id = p.category_id
+       INNER JOIN brands b ON b.brand_id = p.brand_id
+       LEFT JOIN (
+         SELECT product_id, MIN(image_url) AS image_url
+         FROM product_images
+         WHERE is_main = 1 AND status = 1
+         GROUP BY product_id
+       ) pi ON pi.product_id = p.product_id
+       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+       ORDER BY p.product_id ASC`
+      ,
+      params
+    )
+
+    sendSuccess(res, 200, '获取设备列表成功', products.map((product) => publicProduct(product)))
+  }))
+
+  app.post('/admin/products', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+    const product = validateProductInput(req.body)
+    const result = await query(
+      db,
+      `INSERT INTO products
+        (product_name, category_id, brand_id, price, description, view_count, release_time, status)
+       VALUES (?, ?, ?, ?, ?, 0, NOW(), ?)`,
+      [
+        product.name,
+        product.categoryId,
+        product.brandId,
+        product.price,
+        product.description || null,
+        product.status
+      ]
+    )
+
+    sendSuccess(res, 201, '新增设备成功', {
+      id: result.insertId,
+      ...product
+    })
+  }))
+
+  app.put('/admin/products/:id', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+    const productId = Number(req.params.id)
+    const currentProduct = await findProductById(productId)
+
+    if (!currentProduct) {
+      throw createHttpError(404, '设备不存在')
+    }
+
+    const product = validateProductInput({
+      name: req.body.name === undefined ? currentProduct.product_name : req.body.name,
+      categoryId: req.body.categoryId === undefined ? currentProduct.category_id : req.body.categoryId,
+      brandId: req.body.brandId === undefined ? currentProduct.brand_id : req.body.brandId,
+      price: req.body.price === undefined ? currentProduct.price : req.body.price,
+      description: req.body.description === undefined ? currentProduct.description : req.body.description,
+      status: req.body.status === undefined ? currentProduct.status : req.body.status
+    })
+    const result = await query(
+      db,
+      `UPDATE products
+       SET product_name = ?, category_id = ?, brand_id = ?, price = ?, description = ?, status = ?
+       WHERE product_id = ?`,
+      [
+        product.name,
+        product.categoryId,
+        product.brandId,
+        product.price,
+        product.description || null,
+        product.status,
+        productId
+      ]
+    )
+
+    if (!result.affectedRows) {
+      throw createHttpError(404, '设备不存在')
+    }
+
+    sendSuccess(res, 200, '设备信息修改成功', {
+      id: productId,
+      ...product
+    })
+  }))
+
+  app.patch('/admin/products/:id/status', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+    const productId = Number(req.params.id)
+    const status = Number(req.body.status)
+
+    if (![0, 1].includes(status)) {
+      throw createHttpError(400, '设备状态只能为 0 或 1')
+    }
+
+    const result = await query(
+      db,
+      'UPDATE products SET status = ? WHERE product_id = ?',
+      [status, productId]
+    )
+
+    if (!result.affectedRows) {
+      throw createHttpError(404, '设备不存在')
+    }
+
+    sendSuccess(res, 200, status === 1 ? '设备已启用' : '设备已禁用', {
+      id: productId,
+      status
+    })
+  }))
+
+  app.delete('/admin/products/:id', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+    const productId = Number(req.params.id)
+    const result = await query(
+      db,
+      'DELETE FROM products WHERE product_id = ?',
+      [productId]
+    )
+
+    if (!result.affectedRows) {
+      throw createHttpError(404, '设备不存在')
+    }
+
+    sendSuccess(res, 200, '设备删除成功', { id: productId })
+  }))
+
   app.get('/users', authenticate, requireAdmin, asyncRoute(async (req, res) => {
     const users = await query(
       db,
@@ -561,7 +776,7 @@ function createApp(db, options = {}) {
     sendSuccess(res, 200, '获取用户列表成功', users.map((user) => publicUser(user)))
   }))
 
-  app.post('/users', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+  app.post('/users', authenticate, requireSuperAdmin, asyncRoute(async (req, res) => {
     const user = validateUserInput(req.body)
     const conflict = await findUserConflict(user)
     throwConflict(conflict, user)
@@ -570,7 +785,7 @@ function createApp(db, options = {}) {
     sendSuccess(res, 201, '新增用户成功', publicUser(createdUser))
   }))
 
-  app.put('/users/:id', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+  app.put('/users/:id', authenticate, requireSuperAdmin, asyncRoute(async (req, res) => {
     const userId = Number(req.params.id)
     const currentUser = await findUserById(userId)
 
@@ -596,7 +811,7 @@ function createApp(db, options = {}) {
     }))
   }))
 
-  app.patch('/users/:id/status', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+  app.patch('/users/:id/status', authenticate, requireSuperAdmin, asyncRoute(async (req, res) => {
     const userId = Number(req.params.id)
     const status = Number(req.body.status)
 
@@ -620,7 +835,7 @@ function createApp(db, options = {}) {
     })
   }))
 
-  app.delete('/users/:id', authenticate, requireAdmin, asyncRoute(async (req, res) => {
+  app.delete('/users/:id', authenticate, requireSuperAdmin, asyncRoute(async (req, res) => {
     const userId = Number(req.params.id)
     const result = await query(
       db,
@@ -646,7 +861,7 @@ function createApp(db, options = {}) {
     if (err.code === 'ER_ROW_IS_REFERENCED_2') {
       res.status(409).json({
         code: 409,
-        message: '该用户存在关联的收藏或评论，无法直接删除'
+        message: '该数据存在关联记录，无法直接删除'
       })
       return
     }

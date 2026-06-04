@@ -441,4 +441,5 @@ insert into users
 values(114510,'gin','123456','15860827759','cole36620@gmail.com','男',1,now());
 -- 添加管理员
 insert into admin
-values(1,'admin1','123456','3277314262@qq.com','超级管理员',1);
+values(1,'admin1','123456','3277314262@qq.com','超级管理员',1),
+(2,'admin2','123456','1145144@163.com','普通管理员',1);;

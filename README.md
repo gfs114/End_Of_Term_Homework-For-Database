@@ -592,9 +592,106 @@ create table admin_comment (
 
 !![image-20260603200657745](README.assets/image-20260603200657745.png)
 
-### 6.3 数据装载
+### 6.3 创建用户
 
-6.3.1 加入种类
+6.3.1 添加用户
+
+```sql
+insert into users
+values(114510,'gin','123456','15860827759','cole36620@gmail.com','男',1,now()),
+(114511,'lisa','pass789','13912345678','lisa_wang@qq.com','女',1,now()),
+(114512,'tom_chen','tom2024','15012345678','tomchen@163.com','男',1,now()),
+(114513,'emma_li','emma@123','18612345678','emma.li@gmail.com','女',1,now()),
+(114514,'jack_ma','jack666','13712345678','jackma@outlook.com','男',1,now()),
+(114515,'sophia','soph@2024','15912345678','sophia.z@gmail.com','女',1,now()),
+(114516,'alex_wu','alex1234','13812345678','alexwu@qq.com','男',1,now()),
+(114517,'mia_zhang','mia@pass','18712345678','miazhang@126.com','女',1,now()),
+(114518,'leo_huang','leo2024','13612345678','leo.huang@gmail.com','男',1,now()),
+(114519,'olivia','olivia@1','15212345678','olivia.liu@163.com','女',1,now()),
+(114520,'ryan_zhou','ryan6666','18512345678','ryan.zhou@qq.com','男',1,now()),
+(114521,'luna_he','luna123','15512345678','lunahe@gmail.com','女',0,now()),
+(114522,'ethan_sun','ethan@88','13312345678','ethansun@outlook.com','男',1,now()),
+(114523,'ava_yang','ava2024!','18912345678','ava.yang@126.com','女',1,now()),
+(114524,'noah_lin','noahpass','15112345678','noahlin@gmail.com','男',1,now()),
+(114525,'ella_deng','ella@555','18212345678','elladeng@163.com','女',1,now()),
+(114526,'liam_guo','liam1234','15712345678','liam.guo@qq.com','男',0,now()),
+(114527,'zoe_pan','zoe_pass','13512345678','zoepan@gmail.com','女',1,now()),
+(114528,'mason_shi','mason666','18812345678','masonshi@outlook.com','男',1,now()),
+(114529,'ivy_jiang','ivy@2024','15312345678','ivy.jiang@163.com','女',1,now());
+```
+
+![image-20260604192229322](README.assets/image-20260604192229322.png)
+
+6.3.2 添加管理员账号
+
+```sql
+insert into admin
+values(1,'admin1','123456','3277314262@qq.com','超级管理员',1),
+(2,'admin2','123456','1145144@163.com','普通管理员',1),
+(3,'admin3','123456','zhangwei@qq.com','普通管理员',1),
+(4,'admin4','123456','liqiang@163.com','普通管理员',1),
+(5,'admin5','123456','wangfang@126.com','普通管理员',1),
+(6,'admin6','123456','chenjie@qq.com','普通管理员',1),
+(7,'admin7','123456','yangliu@163.com','普通管理员',1),
+(8,'admin8','123456','huangfei@outlook.com','普通管理员',1),
+(9,'admin9','123456','zhaomin@gmail.com','普通管理员',1),
+(10,'admin10','123456','wuxin@126.com','普通管理员',1),
+(11,'admin11','123456','sunlei@qq.com','普通管理员',1),
+(12,'admin12','123456','maxia@163.com','普通管理员',1),
+(13,'admin13','123456','guojing@outlook.com','普通管理员',1),
+(14,'admin14','123456','linfang@gmail.com','普通管理员',1),
+(15,'admin15','123456','heyun@126.com','普通管理员',1),
+(16,'admin16','123456','liuqiang@qq.com','普通管理员',1),
+(17,'admin17','123456','zhoujie@163.com','普通管理员',1),
+(18,'admin18','123456','xuting@outlook.com','普通管理员',1),
+(19,'admin19','123456','zhenghao@gmail.com','普通管理员',1),
+(20,'admin20','123456','tanwei@126.com','普通管理员',1);
+```
+
+![image-20260604192515733](README.assets/image-20260604192515733.png)
+
+### 6.4 创建索引
+
+```sql
+show index from admin;
+show index from admin_brand;
+show index from admin_category;
+show index from admin_comment;
+show index from admin_product;
+show index from brands;
+show index from categories;
+show index from comments;
+show index from favorites;
+show index from product_images;
+show index from products;
+show index from users;
+```
+
+![image-20260604191354114](README.assets/image-20260604191354114.png)![image-20260604191416040](README.assets/image-20260604191416040.png)
+
+![image-20260604191425153](README.assets/image-20260604191425153.png)
+
+![image-20260604191442817](README.assets/image-20260604191442817.png)
+
+![image-20260604191459637](README.assets/image-20260604191459637.png)
+
+![image-20260604191512548](README.assets/image-20260604191512548.png)
+
+![image-20260604191526126](README.assets/image-20260604191526126.png)
+
+![image-20260604191535573](README.assets/image-20260604191535573.png)
+
+![image-20260604191547806](README.assets/image-20260604191547806.png)
+
+![image-20260604191559566](README.assets/image-20260604191559566.png)
+
+![image-20260604191609040](README.assets/image-20260604191609040.png)
+
+![image-20260604191617144](README.assets/image-20260604191617144.png)
+
+### 6.5 数据装载
+
+6.5.1 加入种类
 
 ```sql
 insert into categories (category_name,parent_id,description,sort_order,status)
@@ -603,7 +700,9 @@ values('手机',null,'手机类数码产品',1,1),('电脑',null,'电脑类数�
 
 ![image-20260603201722364](README.assets/image-20260603201722364.png)
 
-6.3.2 添加品牌
+
+
+6.5.2 添加品牌
 
 ```sql
 insert into brands (brand_name, logo, country, website, status)
@@ -633,20 +732,31 @@ values
 
 由于数量过多，故不插入图片与源码
 
-6.3.4 添加用户
+### 6.6 数据库测试与试运行
 
-```sql
-insert into users
-values(114510,'gin','123456','15860827759','cole36620@gmail.com','男',1,now());
-```
+6.6.1 管理员功能
 
-![image-20260603214735572](README.assets/image-20260603214735572.png)
+首先先添加一个用户名为zewei的数据，如图
 
-6.3.5 添加管理员账号
+![image-20260604205054543](README.assets/image-20260604205054543.png)
 
-```sql
-insert into admin
-values(1,'admin1','123456','3277314262@qq.com','超级管理员',1);
-```
+添加完成后，在管理员系统即可看到对应用户信息![image-20260604205451916](README.assets/image-20260604205451916.png)
 
-![image-20260603214951695](README.assets/image-20260603214951695.png)
+选择对应用户关闭按钮，即可实现状态的切换
+
+![image-20260604205911879](README.assets/image-20260604205911879.png)
+
+点击编辑，即可对用户执行修改信息操作
+
+![image-20260604210029584](README.assets/image-20260604210029584.png)
+
+![image-20260604210039063](README.assets/image-20260604210039063.png)
+
+
+
+## 7.数据库运行与维护
+
+### 7.1 运行与备份数据库
+
+### 7.2 维护数据库
+

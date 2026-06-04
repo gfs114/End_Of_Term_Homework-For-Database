@@ -50,12 +50,20 @@
             @clear="handleFilterChange"
           />
 
-          <el-select v-model="filters.brandId" placeholder="全部品牌" clearable @change="handleFilterChange">
+          <el-select
+            v-model="filters.brandIds"
+            placeholder="全部品牌"
+            multiple
+            collapse-tags
+            collapse-tags-tooltip
+            clearable
+            @change="handleFilterChange"
+          >
             <el-option
               v-for="brand in brands"
               :key="brand.id"
               :label="brand.name"
-              :value="String(brand.id)"
+              :value="brand.id"
             />
           </el-select>
 
@@ -256,7 +264,7 @@ export default {
       filters: {
         keyword: '',
         categoryId: '',
-        brandId: '',
+        brandIds: [],
         minPrice: null,
         maxPrice: null,
         sort: 'popular'
@@ -317,6 +325,13 @@ export default {
         const params = {}
 
         Object.entries(this.filters).forEach(([key, value]) => {
+          if (key === 'brandIds') {
+            if (value.length) {
+              params.brandIds = value.join(',')
+            }
+            return
+          }
+
           if (value !== '' && value !== null && value !== undefined) {
             params[key] = value
           }
@@ -338,7 +353,7 @@ export default {
       this.filters = {
         keyword: '',
         categoryId: '',
-        brandId: '',
+        brandIds: [],
         minPrice: null,
         maxPrice: null,
         sort: 'popular'
