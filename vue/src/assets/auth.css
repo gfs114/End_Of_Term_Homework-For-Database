@@ -1,0 +1,241 @@
+:root {
+  --auth-ink: #142033;
+  --auth-muted: #68778b;
+  --auth-line: #d9e3ec;
+  --auth-blue: #1769e0;
+  --auth-green: #16a085;
+  --auth-surface: #ffffff;
+  --auth-background: #edf3f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  color: var(--auth-ink);
+  background: var(--auth-background);
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(380px, 1.08fr) minmax(420px, 0.92fr);
+  background: #f7fafc;
+}
+
+.auth-visual {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 54px;
+  color: #fff;
+  background:
+    linear-gradient(135deg, rgba(5, 20, 38, 0.94), rgba(8, 80, 111, 0.74)),
+    url("./computer_image/拯救者Y7000P 2025 AI元启.jpg") center / cover no-repeat;
+}
+
+.auth-visual::after {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  pointer-events: none;
+}
+
+.auth-brand,
+.auth-visual-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.auth-brand-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.auth-visual-copy {
+  width: min(520px, 100%);
+  margin-top: min(34vh, 300px);
+}
+
+.auth-visual-copy p {
+  margin: 0 0 14px;
+  color: #91e4d5;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-visual-copy h1 {
+  margin: 0;
+  font-family: Georgia, "Microsoft YaHei", serif;
+  font-size: 58px;
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.auth-visual-copy span {
+  display: block;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.auth-panel {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 44px;
+  background: #f7fafc;
+}
+
+.auth-form-wrap {
+  width: min(420px, 100%);
+}
+
+.auth-form-wrap--wide {
+  width: min(460px, 100%);
+}
+
+.auth-heading {
+  margin-bottom: 30px;
+}
+
+.auth-heading p {
+  margin: 0 0 8px;
+  color: var(--auth-green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-heading h2 {
+  margin: 0;
+  color: var(--auth-ink);
+  font-family: Georgia, "Microsoft YaHei", serif;
+  font-size: 34px;
+  font-weight: 500;
+}
+
+.auth-heading span {
+  display: block;
+  margin-top: 10px;
+  color: var(--auth-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.auth-form .el-form-item {
+  margin-bottom: 20px;
+}
+
+.auth-form .el-form-item__label {
+  color: #34445a;
+  font-weight: 700;
+}
+
+.auth-form .el-input__wrapper,
+.auth-form .el-select__wrapper {
+  min-height: 44px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--auth-line) inset;
+}
+
+.auth-form .el-input__wrapper.is-focus,
+.auth-form .el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 1px var(--auth-blue) inset;
+}
+
+.auth-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -2px 0 22px;
+}
+
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.auth-link {
+  color: var(--auth-blue);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+.auth-submit {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.auth-footer {
+  margin-top: 24px;
+  color: var(--auth-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .auth-page {
+    display: block;
+  }
+
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-panel {
+    min-height: 100vh;
+    padding: 30px 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-panel {
+    align-items: start;
+    padding-top: 54px;
+  }
+
+  .auth-heading h2 {
+    font-size: 30px;
+  }
+
+  .auth-options {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .auth-links {
+    justify-content: flex-start;
+  }
+}

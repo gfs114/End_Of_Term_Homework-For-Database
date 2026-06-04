@@ -8,8 +8,12 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "axios": "^1.17.0",
     "core-js": "^3.8.3",
+    "element-plus": "^2.14.1",
     "json-server": "^1.0.0-beta.15",
+    "mysql2": "^3.22.4",
     "vue": "^3.2.13",
     "vue-router": "^4.6.4"
   },
