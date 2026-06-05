@@ -6,6 +6,7 @@
         <h1>数码产品配置对比系统</h1>
       </div>
       <div class="mine-topbar-actions">
+        <el-button icon="Star" @click="$router.push('/favorites')">我的收藏</el-button>
         <el-button type="primary" icon="ShoppingCart" @click="$router.push('/products')">产品挑选</el-button>
         <el-button icon="SwitchButton" @click="handleLogout">退出登录</el-button>
       </div>

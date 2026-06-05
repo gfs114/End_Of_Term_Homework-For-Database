@@ -1,62 +1,58 @@
 <template>
-  <main class="auth-page">
-    <section class="auth-visual" aria-label="系统介绍">
-      <div class="auth-brand">
-        <span class="auth-brand-mark">DC</span>
-        <span>数码产品配置对比系统</span>
+  <main class="login-page">
+    <section class="login-form-panel register-form-panel">
+      <div class="login-title">
+        <el-icon :size="34"><UserFilled /></el-icon>
+        <h1>这个是注册界面</h1>
+        <p>请输入用户名、手机号、邮箱和密码</p>
       </div>
-      <div class="auth-visual-copy">
-        <p>CREATE ACCOUNT</p>
-        <h1>建立你的数码产品资料库</h1>
-        <span>注册后即可保存个人信息，并为后续收藏、评论和设备管理做好准备。</span>
-      </div>
-    </section>
 
-    <section class="auth-panel">
-      <div class="auth-form-wrap auth-form-wrap--wide">
-        <header class="auth-heading">
-          <p>普通用户注册</p>
-          <h2>创建账号</h2>
-          <span>请填写与数据库用户表一致的基本信息。</span>
-        </header>
+      <el-form
+        ref="registerForm"
+        :model="form"
+        :rules="rules"
+        label-position="top"
+        @keyup.enter="handleRegister"
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model.trim="form.username" prefix-icon="User" placeholder="2 至 16 个字符" clearable />
+        </el-form-item>
 
-        <el-form
-          ref="registerForm"
-          :model="form"
-          :rules="rules"
-          label-position="top"
-          class="auth-form"
-          @keyup.enter="handleRegister"
-        >
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model.trim="form.username" prefix-icon="User" placeholder="2 至 16 个字符" clearable />
-          </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model.trim="form.phone" prefix-icon="Phone" placeholder="请输入 11 位手机号" clearable />
+        </el-form-item>
 
-          <el-form-item label="手机号" prop="phone">
-            <el-input v-model.trim="form.phone" prefix-icon="Phone" placeholder="请输入 11 位手机号" clearable />
-          </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model.trim="form.email" prefix-icon="Message" placeholder="请输入邮箱" clearable />
+        </el-form-item>
 
-          <el-form-item label="邮箱" prop="email">
-            <el-input v-model.trim="form.email" prefix-icon="Message" placeholder="请输入邮箱" clearable />
-          </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+            prefix-icon="Lock"
+            placeholder="6 至 16 个字符"
+            show-password
+          />
+        </el-form-item>
 
-          <el-form-item label="密码" prop="password">
-            <el-input v-model="form.password" type="password" prefix-icon="Lock" placeholder="6 至 16 个字符" show-password />
-          </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            prefix-icon="Lock"
+            placeholder="请再次输入密码"
+            show-password
+          />
+        </el-form-item>
 
-          <el-form-item label="确认密码" prop="confirmPassword">
-            <el-input v-model="form.confirmPassword" type="password" prefix-icon="Lock" placeholder="请再次输入密码" show-password />
-          </el-form-item>
+        <el-button type="primary" class="login-button" :loading="loading" @click="handleRegister">
+          注册
+        </el-button>
+      </el-form>
 
-          <el-button type="primary" class="auth-submit" :loading="loading" @click="handleRegister">
-            注册
-          </el-button>
-        </el-form>
-
-        <div class="auth-footer">
-          已有账号？
-          <router-link class="auth-link" to="/login">返回登录</router-link>
-        </div>
+      <div class="login-links">
+        <router-link to="/login">返回登录</router-link>
       </div>
     </section>
   </main>
@@ -137,3 +133,81 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f5f7fa;
+}
+
+.login-form-panel {
+  width: min(420px, 100%);
+  padding: 32px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(31, 45, 61, 0.08);
+}
+
+.register-form-panel {
+  width: min(440px, 100%);
+}
+
+.login-title {
+  margin-bottom: 28px;
+  color: #303133;
+  text-align: center;
+}
+
+.login-title .el-icon {
+  color: #409eff;
+}
+
+.login-title h1 {
+  margin: 12px 0 8px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.login-title p {
+  margin: 0;
+  color: #909399;
+  font-size: 14px;
+}
+
+.login-page a {
+  color: #409eff;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.login-page a:hover {
+  text-decoration: underline;
+}
+
+.login-button {
+  width: 100%;
+}
+
+.login-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    place-items: start center;
+    padding: 48px 16px 24px;
+  }
+
+  .login-form-panel {
+    padding: 24px;
+  }
+}
+</style>

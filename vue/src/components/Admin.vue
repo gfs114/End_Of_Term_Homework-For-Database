@@ -42,7 +42,16 @@
               <span>电脑</span>
             </el-menu-item>
           </el-sub-menu>
+          <el-menu-item index="catalog-manage">
+            <el-icon><Collection /></el-icon>
+            <span>分类与品牌</span>
+          </el-menu-item>
         </el-sub-menu>
+
+        <el-menu-item index="comment-manage">
+          <el-icon><ChatLineSquare /></el-icon>
+          <span>评论管理</span>
+        </el-menu-item>
 
         <el-sub-menu index="role-manage">
           <template #title>
@@ -52,6 +61,10 @@
           <el-menu-item index="user-info">
             <el-icon><User /></el-icon>
             <span>用户信息</span>
+          </el-menu-item>
+          <el-menu-item v-if="isSuperAdmin" index="manager-info">
+            <el-icon><Avatar /></el-icon>
+            <span>普通管理员</span>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>
@@ -99,14 +112,23 @@ export default {
       menuRouteMap: {
         'device-phone': '/admin/products/phone',
         'device-computer': '/admin/products/computer',
-        'user-info': '/admin/users'
+        'catalog-manage': '/admin/catalog',
+        'comment-manage': '/admin/comments',
+        'user-info': '/admin/users',
+        'manager-info': '/admin/managers'
       }
     }
   },
   computed: {
+    isSuperAdmin() {
+      return this.currentUser.role === '超级管理员'
+    },
     pageTitle() {
       if (this.$route.path === '/admin/products/phone') return '手机设备管理'
       if (this.$route.path === '/admin/products/computer') return '电脑设备管理'
+      if (this.$route.path === '/admin/catalog') return '分类与品牌管理'
+      if (this.$route.path === '/admin/comments') return '用户评论管理'
+      if (this.$route.path === '/admin/managers') return '普通管理员管理'
       return '用户信息管理'
     }
   },

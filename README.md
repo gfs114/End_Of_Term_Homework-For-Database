@@ -445,7 +445,8 @@ create table products (
     index idx_products_brand_id (brand_id),
     check (price >= 0),
     foreign key (category_id) references categories(category_id),
-    foreign key (brand_id) references brands(brand_id)
+    foreign key (brand_id) references brands(brand_id),
+    on delete cascade
 ) engine=innodb;
 ```
 
@@ -594,7 +595,7 @@ create table admin_comment (
 
 ### 6.3 创建用户
 
-6.3.1 添加用户
+#### 6.3.1 添加用户
 
 ```sql
 insert into users
@@ -622,7 +623,7 @@ values(114510,'gin','123456','15860827759','cole36620@gmail.com','男',1,now()),
 
 ![image-20260604192229322](README.assets/image-20260604192229322.png)
 
-6.3.2 添加管理员账号
+#### 6.3.2 添加管理员账号
 
 ```sql
 insert into admin
@@ -691,7 +692,7 @@ show index from users;
 
 ### 6.5 数据装载
 
-6.5.1 加入种类
+#### 6.5.1 加入种类
 
 ```sql
 insert into categories (category_name,parent_id,description,sort_order,status)
@@ -702,7 +703,7 @@ values('手机',null,'手机类数码产品',1,1),('电脑',null,'电脑类数�
 
 
 
-6.5.2 添加品牌
+#### 6.5.2 添加品牌
 
 ```sql
 insert into brands (brand_name, logo, country, website, status)
@@ -728,13 +729,107 @@ values
 
 ![image-20260603204402213](README.assets/image-20260603204402213.png)
 
-6.3.3 插入手机，电脑与对应图片
+#### 6.3.3 插入手机，电脑与对应图片
 
 由于数量过多，故不插入图片与源码
 
+#### 6.3.4 插入评论
+
+```sql
+use choose_device;
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'HUAWEI Mate 60' limit 1),
+  '外观设计很有辨识度，日常使用非常流畅，续航表现也比较稳定。',
+  5,
+  now(),
+  12,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'HUAWEI Mate 60 Pro' limit 1),
+  '屏幕显示效果细腻，拍照能力很强，就是机身握持感稍微偏厚。',
+  4,
+  date_sub(now(), interval 1 day),
+  8,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'HUAWEI Mate 70' limit 1),
+  '系统动画顺滑，电池容量够用，作为主力机体验不错。',
+  5,
+  date_sub(now(), interval 2 day),
+  16,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'MacBook Air 13 (M4)' limit 1),
+  '机身轻薄，续航时间长，日常学习和办公都很合适。',
+  5,
+  date_sub(now(), interval 3 day),
+  21,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'ThinkPad X1 Carbon' limit 1),
+  '键盘手感很好，商务办公体验扎实，价格如果再低一点会更香。',
+  4,
+  date_sub(now(), interval 4 day),
+  7,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = '拯救者 Y7000P 2025' limit 1),
+  '游戏性能比较强，散热表现不错，运行大型游戏比较稳定。',
+  4,
+  date_sub(now(), interval 5 day),
+  18,
+  0,
+  1
+);
+```
+
+![image-20260605221052982](README.assets/image-20260605221052982.png)
+
 ### 6.6 数据库测试与试运行
 
-6.6.1 管理员功能
+#### 6.6.1 管理员功能
+
+##### 6.6.1.1 用户管理
 
 首先先添加一个用户名为zewei的数据，如图
 
@@ -752,11 +847,224 @@ values
 
 ![image-20260604210039063](README.assets/image-20260604210039063.png)
 
+点击删除，即可对用户进行删除操作
 
+![image-20260605223644182](README.assets/image-20260605223644182.png)
+
+![image-20260605223659632](README.assets/image-20260605223659632.png)
+
+##### 6.6.1.2 产品分类管理
+
+点击产品分类，即可进入产品分类页面
+
+![image-20260605224401867](README.assets/image-20260605224401867.png)
+
+点击新增分类，即可添加新的分类
+
+![image-20260605224546294](README.assets/image-20260605224546294.png)
+
+![image-20260605224600006](README.assets/image-20260605224600006.png)
+
+点击编辑，即可进行修改
+
+![image-20260605224705503](README.assets/image-20260605224705503.png)
+
+点击状态，即可切换目前的状态
+
+![image-20260605225034050](README.assets/image-20260605225034050.png)
+
+![image-20260605224719314](README.assets/image-20260605224719314.png)
+
+点击删除，即可删除对应的分类
+
+![image-20260605224743234](README.assets/image-20260605224743234.png)
+
+![image-20260605224800593](README.assets/image-20260605224800593.png)
+
+##### 6.6.1.3 品牌信息管理
+
+点击产品管理，即可看到所有品牌
+
+![image-20260605224917368](README.assets/image-20260605224917368.png)
+
+点击新增品牌，即可添加品牌
+
+![image-20260605233708326](README.assets/image-20260605233708326.png)
+
+
+
+![image-20260605233845623](README.assets/image-20260605233845623.png)
+
+点击保存
+
+![image-20260605233928438](README.assets/image-20260605233928438.png)
+
+点击状态按钮，即可禁用
+
+![image-20260605234019257](README.assets/image-20260605234019257.png)
+
+点击编辑，即可改动数据
+
+![image-20260605234102592](README.assets/image-20260605234102592.png)
+
+![image-20260605234121887](README.assets/image-20260605234121887.png)
+
+点击删除，即可删除对应品牌
+
+![image-20260605234143843](README.assets/image-20260605234143843.png)
+
+![image-20260605234201509](README.assets/image-20260605234201509.png)
+
+##### 6.6.1.4 产品信息管理
+
+点击设备信息，即可选择所需要的设备进行查询
+
+![image-20260605234314246](README.assets/image-20260605234314246.png)
+
+![image-20260605234327285](README.assets/image-20260605234327285.png)
+
+这里以手机为例
+
+点击新增手机，即可添加手机
+
+![image-20260606000001927](README.assets/image-20260606000001927.png)
+
+点击保存，即可在后台看到数据
+
+![image-20260606000033503](README.assets/image-20260606000033503.png)
+
+点击编辑，即可编辑数据
+
+![image-20260606000237214](README.assets/image-20260606000237214.png)
+
+点击删除，即可删除对应数据
+
+![image-20260606000327650](README.assets/image-20260606000327650.png)
+
+![image-20260606010140653](README.assets/image-20260606010140653.png)
+
+##### 6.6.1.5 配置信息管理
+
+在对应设备信息中，点击配置即可添加配置
+
+![image-20260606010227511](README.assets/image-20260606010227511.png)
+
+输入对应的配置，即可添加
+
+![image-20260606010321757](README.assets/image-20260606010321757.png)
+
+点击编辑，即可编辑对应配置
+
+![image-20260606010408831](README.assets/image-20260606010408831.png)
+
+![image-20260606010417404](README.assets/image-20260606010417404.png)
+
+点击删除即可删除对应配置
+
+![image-20260606010538790](README.assets/image-20260606010538790.png)
+
+##### 6.6.1.6 产品图片管理
+
+还是以手机为例
+
+点击图片，即可进行商品图片管理
+
+![image-20260606010617476](README.assets/image-20260606010617476.png)
+
+上传图片，即可
+
+![image-20260606010656525](README.assets/image-20260606010656525.png)
+
+并且可以设置主图，点击主图即可替换
+
+![image-20260606010731390](README.assets/image-20260606010731390.png)
+
+点击删除即可删除对应图片
+
+![image-20260606010754446](README.assets/image-20260606010754446.png)
+
+##### 6.6.1.7 评论管理
+
+选择评论管理，即可查看对应评论
+
+![image-20260606010821352](README.assets/image-20260606010821352.png)
+
+点击隐藏，即可隐藏对应商品的评论![image-20260606010859270](README.assets/image-20260606010859270.png)
+
+![image-20260606011046505](README.assets/image-20260606011046505.png)
+
+点击删除，即可删除对应的评论![image-20260606010916983](README.assets/image-20260606010916983.png)
+
+![image-20260606010927960](README.assets/image-20260606010927960.png)
+
+![image-20260606011026760](README.assets/image-20260606011026760.png)
+
+#### 6.6.2 用户功能
+
+##### 6.6.2.1 用户登录与注册
+
+点击注册，即可进入注册页面![image-20260606014409970](README.assets/image-20260606014409970.png)
+
+点击注册，即可注册账号![image-20260606014426279](README.assets/image-20260606014426279.png)
+
+点击登录，即可登录
+
+![image-20260606014448627](README.assets/image-20260606014448627.png)、
+
+登录后自动进入个人中心
+
+![image-20260606014539916](README.assets/image-20260606014539916.png)
+
+##### 6.6.2.2 查看商品信息
+
+点击商品挑选进入对应页面
+
+![image-20260606014610501](README.assets/image-20260606014610501.png)
+
+可以直观的看到对应设备的信息
+
+##### 6.6.2.3 查询产品
+
+在搜索框里面搜索需要设备的信息即可![image-20260606014740248](README.assets/image-20260606014740248.png)
+
+##### 6.6.2.4 查看商品详情
+
+点击想看的商品，即可查看商品详情
+
+![image-20260606014813208](README.assets/image-20260606014813208.png)
+
+##### 6.6.2.5 商品对比
+
+挑选想要的商品即可，最多五个
+
+![image-20260606014901326](README.assets/image-20260606014901326.png)
+
+##### 6.6.2.6 收藏商品
+
+点击收藏，即可收藏商品，可在我的收藏里面查看
+
+![image-20260606014926323](README.assets/image-20260606014926323.png)
+
+![image-20260606015024805](README.assets/image-20260606015024805.png)
+
+##### 6.6.2.7 评分与评论
+
+进入详情，在用户评分与评论中输入自己想要的评论即可
+
+![image-20260606015109363](README.assets/image-20260606015109363.png)
 
 ## 7.数据库运行与维护
 
 ### 7.1 运行与备份数据库
 
+点击备份按钮，点击新建备份。进行数据库备份
+
+![image-20260606020515937](README.assets/image-20260606020515937.png)
+
 ### 7.2 维护数据库
 
+1. 在products表中不小心把手机处理器名称给改错了![image-20260606020730560](README.assets/image-20260606020730560.png)
+
+2. 此时，点击备份，选择还原备份，进行数据库恢复![image-20260606020823875](README.assets/image-20260606020823875.png)
+
+3. 此时，在打开products表看对应手机配置，即为正确配置![image-20260606020906635](README.assets/image-20260606020906635.png)

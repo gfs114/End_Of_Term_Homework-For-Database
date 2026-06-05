@@ -1,28 +1,15 @@
 <template>
   <main class="account-page products-page" :class="{ 'has-compare-tray': selectedProducts.length }">
-    <header class="account-topbar product-topbar">
-      <div>
-        <p>DEVICE COMPARE</p>
-        <h1>数码产品配置对比系统 · 产品挑选</h1>
-      </div>
-      <div class="account-actions">
-        <el-button icon="User" @click="$router.push('/user')">个人资料</el-button>
-        <div class="identity">
-          <span>普通用户</span>
-          <strong>{{ currentUser.username }}</strong>
-        </div>
-        <el-button icon="SwitchButton" @click="handleLogout">退出用户端</el-button>
-      </div>
-    </header>
-
     <section class="product-workspace">
-      <div class="product-heading">
-        <div>
-          <p>产品挑选</p>
-          <h2>筛选并对比适合你的设备</h2>
-          <span>可同时选择最多 5 款产品，集中查看价格与核心参数差异。</span>
+      <div class="product-actions-bar">
+        <div class="product-page-mark">
+          <span>产品挑选</span>
         </div>
-        <el-button icon="Refresh" :loading="loading" @click="fetchProducts">刷新数据</el-button>
+        <div class="product-actions">
+          <el-button icon="Star" @click="$router.push('/favorites')">我的收藏</el-button>
+          <el-button icon="User" @click="$router.push('/user')">个人中心</el-button>
+          <el-button icon="SwitchButton" @click="handleLogout">退出</el-button>
+        </div>
       </div>
 
       <div class="filter-tool">
@@ -94,14 +81,11 @@
 
           <el-button type="primary" icon="Search" @click="handleFilterChange">筛选</el-button>
           <el-button icon="RefreshLeft" @click="resetFilters">重置</el-button>
+          <el-button icon="Refresh" :loading="loading" @click="fetchProducts">刷新</el-button>
         </div>
       </div>
 
       <div class="result-heading">
-        <div>
-          <strong>{{ products.length }}</strong>
-          <span>款符合条件的产品</span>
-        </div>
         <span>已选择 {{ selectedProducts.length }} / {{ MAX_COMPARE }}</span>
       </div>
 
@@ -111,6 +95,10 @@
           :key="product.id"
           class="product-card"
           :class="{ selected: isSelected(product) }"
+          role="link"
+          tabindex="0"
+          @click="openDetail(product)"
+          @keyup.enter="openDetail(product)"
         >
           <div class="product-image">
             <el-icon :size="52"><Monitor /></el-icon>
@@ -130,18 +118,26 @@
               <el-tag v-if="isSelected(product)" type="success" size="small">已选择</el-tag>
             </div>
             <h3 :title="product.name">{{ product.name }}</h3>
+            <div class="product-rating">
+              <el-rate :model-value="product.rating" disabled allow-half />
+              <span>{{ product.commentCount }} 条评论</span>
+            </div>
             <ul>
               <li v-for="spec in visibleSpecs(product)" :key="spec">{{ spec }}</li>
             </ul>
             <div class="product-card-footer">
               <strong>{{ priceText(product.price) }}</strong>
-              <el-button
-                :type="isSelected(product) ? 'success' : 'primary'"
-                :icon="isSelected(product) ? 'Check' : 'Plus'"
-                @click="toggleProduct(product)"
-              >
-                {{ isSelected(product) ? '已加入对比' : '加入对比' }}
-              </el-button>
+              <div class="product-card-actions">
+                <el-button circle :icon="product.isFavorite ? 'StarFilled' : 'Star'" title="收藏" @click.stop="toggleFavorite(product)" />
+                <el-button circle icon="View" title="查看详情" @click.stop="openDetail(product)" />
+                <el-button
+                  circle
+                  :type="isSelected(product) ? 'success' : 'primary'"
+                  :icon="isSelected(product) ? 'Check' : 'Plus'"
+                  title="加入对比"
+                  @click.stop="toggleProduct(product)"
+                />
+              </div>
             </div>
           </div>
         </article>
@@ -181,7 +177,7 @@
         </div>
         <div class="compare-actions">
           <el-button text @click="clearComparison">清空</el-button>
-          <el-button type="primary" icon="DataAnalysis" @click="openComparison">开始对比</el-button>
+          <el-button type="primary" icon="DataAnalysis" :loading="compareLoading" @click="openComparison">开始对比</el-button>
         </div>
       </div>
     </aside>
@@ -238,26 +234,65 @@
         </table>
       </div>
     </el-dialog>
+
   </main>
 </template>
 
 <script>
 import http from '@/utils/http'
-import { clearAuthSession, getAuthUser } from '@/utils/auth'
+import { clearAuthSession } from '@/utils/auth'
 
 const MAX_COMPARE = 5
+const COMPARE_STORAGE_KEY = 'selectedCompareProducts'
+
+function compareProductSnapshot(product) {
+  return {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    description: product.description || '',
+    viewCount: product.viewCount || 0,
+    categoryId: product.categoryId,
+    categoryName: product.categoryName,
+    brandId: product.brandId,
+    brandName: product.brandName,
+    brandLogo: product.brandLogo || '',
+    imageUrl: product.imageUrl || '',
+    status: product.status,
+    rating: product.rating || 0,
+    commentCount: product.commentCount || 0,
+    isFavorite: Boolean(product.isFavorite),
+    specs: product.specs || []
+  }
+}
+
+function readStoredCompareProducts() {
+  try {
+    const products = JSON.parse(sessionStorage.getItem(COMPARE_STORAGE_KEY) || '[]')
+    return Array.isArray(products) ? products.slice(0, MAX_COMPARE) : []
+  } catch (error) {
+    return []
+  }
+}
+
+function writeStoredCompareProducts(products) {
+  sessionStorage.setItem(
+    COMPARE_STORAGE_KEY,
+    JSON.stringify(products.slice(0, MAX_COMPARE).map((product) => compareProductSnapshot(product)))
+  )
+}
 
 export default {
   name: 'ProductsPage',
   data() {
     return {
       MAX_COMPARE,
-      currentUser: getAuthUser() || {},
       categories: [],
       brands: [],
       products: [],
-      selectedProducts: [],
+      selectedProducts: readStoredCompareProducts(),
       loading: false,
+      compareLoading: false,
       compareVisible: false,
       currentPage: 1,
       pageSize: 12,
@@ -280,7 +315,11 @@ export default {
       const rows = new Map()
 
       this.selectedProducts.forEach((product) => {
-        this.parseSpecs(product.description).forEach((spec) => {
+        const specs = product.specs && product.specs.length
+          ? product.specs
+          : this.parseSpecs(product.description)
+
+        specs.forEach((spec) => {
           if (!rows.has(spec.name)) {
             rows.set(spec.name, { name: spec.name, values: {} })
           }
@@ -312,6 +351,7 @@ export default {
         this.categories = categoryResponse.data.data || []
         this.brands = brandResponse.data.data || []
         this.products = productResponse.data.data || []
+        this.syncStoredComparison()
       } catch (error) {
         this.$message.error(this.getErrorMessage(error, '产品数据加载失败'))
       } finally {
@@ -339,6 +379,7 @@ export default {
 
         const response = await http.get('/products', { params })
         this.products = response.data.data || []
+        this.syncStoredComparison()
         this.currentPage = 1
       } catch (error) {
         this.$message.error(this.getErrorMessage(error, '产品列表加载失败'))
@@ -363,11 +404,29 @@ export default {
     isSelected(product) {
       return this.selectedProducts.some((item) => item.id === product.id)
     },
+    syncStoredComparison() {
+      const restoredProducts = this.selectedProducts
+        .map((selectedProduct) => {
+          const freshProduct = this.products.find((product) => Number(product.id) === Number(selectedProduct.id))
+          return freshProduct ? { ...selectedProduct, ...freshProduct } : selectedProduct
+        })
+        .filter((product, index, products) => {
+          return product && product.id && products.findIndex((item) => Number(item.id) === Number(product.id)) === index
+        })
+        .slice(0, MAX_COMPARE)
+
+      this.selectedProducts = restoredProducts
+      this.persistComparison()
+    },
+    persistComparison() {
+      writeStoredCompareProducts(this.selectedProducts)
+    },
     toggleProduct(product) {
       const index = this.selectedProducts.findIndex((item) => item.id === product.id)
 
       if (index >= 0) {
         this.selectedProducts.splice(index, 1)
+        this.persistComparison()
         return
       }
 
@@ -377,18 +436,56 @@ export default {
       }
 
       this.selectedProducts.push(product)
+      this.persistComparison()
     },
     clearComparison() {
       this.selectedProducts = []
       this.compareVisible = false
+      this.persistComparison()
     },
-    openComparison() {
+    async openComparison() {
       if (this.selectedProducts.length < 2) {
         this.$message.warning('请至少选择 2 款产品进行对比')
         return
       }
 
-      this.compareVisible = true
+      this.compareLoading = true
+
+      try {
+        const response = await http.get('/products/compare', {
+          params: { ids: this.selectedProducts.map((product) => product.id).join(',') }
+        })
+        this.selectedProducts = response.data.data || []
+        this.persistComparison()
+        this.compareVisible = true
+      } catch (error) {
+        this.$message.error(this.getErrorMessage(error, '产品对比信息加载失败'))
+      } finally {
+        this.compareLoading = false
+      }
+    },
+    openDetail(product) {
+      this.$router.push(`/products/${product.id}`)
+    },
+    async toggleFavorite(product) {
+      try {
+        const response = product.isFavorite
+          ? await http.delete(`/favorites/${product.id}`)
+          : await http.post(`/favorites/${product.id}`)
+        product.isFavorite = !product.isFavorite
+        this.handleFavoriteChange({ productId: product.id, isFavorite: product.isFavorite })
+        this.$message.success(response.data.message)
+      } catch (error) {
+        this.$message.error(this.getErrorMessage(error, '收藏操作失败'))
+      }
+    },
+    handleFavoriteChange(payload) {
+      const product = this.products.find((item) => item.id === payload.productId)
+      const selectedProduct = this.selectedProducts.find((item) => item.id === payload.productId)
+
+      if (product) product.isFavorite = payload.isFavorite
+      if (selectedProduct) selectedProduct.isFavorite = payload.isFavorite
+      this.persistComparison()
     },
     parseSpecs(description) {
       if (!description) return []
@@ -422,6 +519,7 @@ export default {
     },
     assetUrl(assetPath) {
       if (!assetPath) return ''
+      if (/^https?:\/\//i.test(assetPath)) return assetPath
 
       const encodedPath = assetPath
         .split('/')
@@ -434,6 +532,7 @@ export default {
       event.target.style.display = 'none'
     },
     handleLogout() {
+      sessionStorage.removeItem(COMPARE_STORAGE_KEY)
       clearAuthSession()
       this.$router.push('/login')
     }
@@ -455,6 +554,38 @@ export default {
 
 .product-workspace {
   padding-bottom: 28px;
+}
+
+.product-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #d5e0e9;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.product-page-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.product-page-mark span {
+  color: #142033;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.product-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .product-heading,
@@ -566,14 +697,21 @@ export default {
   border: 1px solid #d8e2ea;
   border-radius: 6px;
   background: #fff;
+  cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .product-card:hover,
-.product-card.selected {
+.product-card.selected,
+.product-card:focus-visible {
   border-color: #168d78;
   box-shadow: 0 12px 28px rgba(26, 72, 88, 0.12);
   transform: translateY(-2px);
+}
+
+.product-card:focus-visible {
+  outline: 2px solid #168d78;
+  outline-offset: 2px;
 }
 
 .product-image {
@@ -635,6 +773,29 @@ export default {
   line-height: 1.4;
 }
 
+.product-rating,
+.product-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.product-rating {
+  min-height: 24px;
+  margin-bottom: 8px;
+  color: #8a98aa;
+  font-size: 11px;
+}
+
+.product-rating :deep(.el-rate) {
+  height: 20px;
+}
+
+.product-rating :deep(.el-rate__icon) {
+  margin-right: 1px;
+  font-size: 14px;
+}
+
 .product-card ul {
   height: 66px;
   margin: 0 0 14px;
@@ -661,6 +822,14 @@ export default {
 .comparison-price {
   color: #d85040;
   font-size: 17px;
+}
+
+.product-card-actions {
+  flex: 0 0 auto;
+}
+
+.product-card-actions .el-button {
+  margin-left: 0;
 }
 
 .product-pagination {
@@ -849,6 +1018,20 @@ export default {
 }
 
 @media (max-width: 620px) {
+  .product-actions-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .product-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .product-actions .el-button {
+    margin-left: 0;
+  }
+
   .product-heading,
   .category-filter,
   .result-heading {

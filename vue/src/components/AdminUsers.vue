@@ -254,7 +254,7 @@ export default {
       }
     },
     handleDeleteUser(user) {
-      this.$confirm(`确认删除用户“${user.username}”吗？`, '删除确认', {
+      this.$confirm(`确认直接删除用户“${user.username}”吗？该用户的评论和收藏会一起删除。`, '删除确认', {
         confirmButtonText: '删除',
         cancelButtonText: '取消',
         type: 'warning'
