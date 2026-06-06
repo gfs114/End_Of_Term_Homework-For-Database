@@ -956,3 +956,99 @@ delete from favorites where user_id = ? and product_id = ?;
 
 -- 新增收藏，已收藏则恢复并更新时间
 insert into favorites (user_id, product_id, favorite_time, status) values (?, ?, now(), 1) on duplicate key update favorite_time = now(), status = 1;
+
+-- 没有主图时自动设置第一张启用图片为主图
+update product_images pi
+inner join (
+  select product_id, min(image_id) as image_id
+  from product_images
+  where status = 1
+  group by product_id
+  having sum(case when is_main = 1 then 1 else 0 end) = 0
+) fallback_image on fallback_image.image_id = pi.image_id
+set pi.is_main = 1;
+
+-- 开启事务
+start transaction;
+
+-- 提交事务
+commit;
+
+-- 回滚事务
+rollback;
+
+-- 删除产品对应的管理员产品关联
+delete from admin_product where product_id = ?;
+
+-- 删除分类对应的管理员分类关联
+delete from admin_category where category_id = ?;
+
+-- 删除品牌对应的管理员品牌关联
+delete from admin_brand where brand_id = ?;
+
+-- 删除评论对应的管理员评论关联
+delete from admin_comment where comment_id = ?;
+
+-- 根据用户编号检查用户是否存在
+select user_id from users where user_id = ? limit 1;
+
+-- 删除普通管理员对应的分类关联
+delete from admin_category where admin_id = ?;
+
+-- 删除普通管理员对应的品牌关联
+delete from admin_brand where admin_id = ?;
+
+-- 删除普通管理员对应的产品关联
+delete from admin_product where admin_id = ?;
+
+-- 删除普通管理员对应的评论关联
+delete from admin_comment where admin_id = ?;
+
+-- 检查接口健康状态
+select 1 as ok;
+
+-- 查询指定产品的启用评论
+select c.comment_id, c.user_id, u.username, c.product_id, p.product_name, c.content,
+       c.rating, c.comment_time, c.like_count, c.reply_count, c.status
+from comments c
+inner join users u on u.user_id = c.user_id
+inner join products p on p.product_id = c.product_id
+where c.product_id = ? and c.status = 1
+order by c.comment_time desc, c.comment_id desc;
+
+-- 查询我的收藏列表
+select p.product_id, p.product_name, p.price, p.description, p.view_count, p.release_time,
+       p.status, c.category_id, c.category_name, b.brand_id, b.brand_name,
+       b.logo as brand_logo, pi.image_url, f.favorite_time, 1 as is_favorite
+from favorites f
+inner join products p on p.product_id = f.product_id
+inner join categories c on c.category_id = p.category_id
+inner join brands b on b.brand_id = p.brand_id
+left join (
+  select product_id, coalesce(min(case when is_main = 1 then image_url end), min(image_url)) as image_url
+  from product_images
+  where status = 1
+  group by product_id
+) pi on pi.product_id = p.product_id
+where f.user_id = ? and f.status = 1
+order by f.favorite_time desc;
+
+-- 管理员查询用户列表
+select user_id, username, phone, email, gender, status, register_time
+from users
+order by user_id asc;
+
+-- 批量删除管理员评论关联
+delete from admin_comment where comment_id in (?, ?, ?);
+
+-- 批量删除评论
+delete from comments where comment_id in (?, ?, ?);
+
+-- 修改普通管理员时检查账号是否重复
+select admin_id from admin where admin_account = ? and admin_id <> ? limit 1;
+
+-- 修改普通管理员信息：不改密码
+update admin set admin_account = ?, email = ?, status = ? where admin_id = ? and role = ?;
+
+-- 修改普通管理员信息：同时修改密码
+update admin set admin_account = ?, email = ?, status = ?, admin_password = ? where admin_id = ? and role = ?;

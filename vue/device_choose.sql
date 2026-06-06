@@ -48,7 +48,8 @@ create table products (
     index idx_products_brand_id (brand_id),
     check (price >= 0),
     foreign key (category_id) references categories(category_id),
-    foreign key (brand_id) references brands(brand_id)
+    foreign key (brand_id) references brands(brand_id),
+    on delete cascade
 ) engine=innodb;
 create table product_images (
     image_id int not null auto_increment comment '图片编号',
@@ -495,6 +496,91 @@ show index from product_images;
 show index from products;
 show index from users;
 
+-- 添加商品评论
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'HUAWEI Mate 60' limit 1),
+  '外观设计很有辨识度，日常使用非常流畅，续航表现也比较稳定。',
+  5,
+  now(),
+  12,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+(select user_id from users where username = 'gin' limit 1),
+(select product_id from products where product_name = 'HUAWEI Mate 60 Pro' limit 1),
+'屏幕显示效果细腻，拍照能力很强，就是机身握持感稍微偏厚。',
+4,
+date_sub(now(), interval 1 day),
+8,
+0,
+1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'HUAWEI Mate 70' limit 1),
+  '系统动画顺滑，电池容量够用，作为主力机体验不错。',
+  5,
+  date_sub(now(), interval 2 day),
+  16,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'MacBook Air 13 (M4)' limit 1),
+  '机身轻薄，续航时间长，日常学习和办公都很合适。',
+  5,
+  date_sub(now(), interval 3 day),
+  21,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = 'ThinkPad X1 Carbon' limit 1),
+  '键盘手感很好，商务办公体验扎实，价格如果再低一点会更香。',
+  4,
+  date_sub(now(), interval 4 day),
+  7,
+  0,
+  1
+);
+
+insert into comments
+(user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values
+(
+  (select user_id from users where username = 'gin' limit 1),
+  (select product_id from products where product_name = '拯救者 Y7000P 2025' limit 1),
+  '游戏性能比较强，散热表现不错，运行大型游戏比较稳定。',
+  4,
+  date_sub(now(), interval 5 day),
+  18,
+  0,
+  1
+);
+
 -- 查询用户
 select user_id,username,password,phone,email,gender,status,register_time
 from users
@@ -642,3 +728,231 @@ select product_id, min(image_url) as image_url
 from product_images
 where is_main = 1 and status = 1
 group by product_id
+
+-- 检查 comments 表是否已有 rating 评分字段
+show columns from comments like 'rating';
+
+-- 给 comments 表添加 rating 评分字段
+alter table comments add column rating tinyint not null default 5 after content;
+
+-- 检查 favorites 表 favorite_id 是否存在
+show columns from favorites like 'favorite_id';
+
+-- 将 favorites.favorite_id 改为自增主键字段
+alter table favorites modify favorite_id int not null auto_increment;
+
+-- 查询还没有写入 product_specs 的产品描述，用于初始化配置数据
+select p.product_id, p.description from products p where p.description is not null and not exists (select 1 from product_specs ps where ps.product_id = p.product_id);
+
+-- 根据产品描述初始化产品配置，重复配置会忽略
+insert ignore into product_specs (product_id, spec_name, spec_value, sort_order, status) values (?, ?, ?, ?, 1);
+
+-- 按用户名或邮箱查询普通用户，用于登录
+select user_id, username, password, phone, email, gender, status, register_time from users where username = ? or email = ? limit 1;
+
+-- 按用户编号查询普通用户详情
+select user_id, username, password, phone, email, gender, status, register_time from users where user_id = ? limit 1;
+
+-- 检查用户名、手机号、邮箱是否已被占用
+select user_id, username, phone, email from users where username = ? or phone = ? or email = ? limit 1;
+
+-- 新增普通用户
+insert into users (username, password, phone, email, gender, status, register_time) values (?, ?, ?, ?, ?, ?, now());
+
+-- 修改普通用户基础信息和密码
+update users set username = ?, phone = ?, email = ?, gender = ?, password = ?, status = ? where user_id = ?;
+
+-- 重置普通用户密码
+update users set password = ? where user_id = ?;
+
+-- 启用或禁用普通用户
+update users set status = ? where user_id = ?;
+
+-- 删除普通用户
+delete from users where user_id = ?;
+
+-- 按产品编号查询产品基础信息
+select product_id, product_name, category_id, brand_id, price, description, view_count, status from products where product_id = ? limit 1;
+
+-- 查询产品所属分类名称，用于判断图片保存到 phone_image 还是 computer_image
+select c.category_name from products p left join categories c on p.category_id = c.category_id where p.product_id = ? limit 1;
+
+-- 判断产品是否存在
+select product_id from products where product_id = ? limit 1;
+
+-- 查询某分类下的产品
+select product_id from products where category_id = ?;
+
+-- 查询某品牌下的产品
+select product_id from products where brand_id = ?;
+
+-- 产品详情访问量加一
+update products set view_count = view_count + 1 where product_id = ?;
+
+-- 启用或禁用产品
+update products set status = ? where product_id = ?;
+
+-- 新增产品
+insert into products (product_name, category_id, brand_id, price, description, view_count, release_time, status) values (?, ?, ?, ?, ?, 0, now(), ?);
+
+-- 修改产品基础信息
+update products set product_name = ?, category_id = ?, brand_id = ?, price = ?, description = ?, status = ? where product_id = ?;
+
+-- 删除产品
+delete from products where product_id = ?;
+
+-- 查询产品图片地址，用于删除产品时清理上传文件
+select image_url from product_images where product_id = ?;
+
+-- 查询某产品的全部图片
+select image_id, product_id, image_url, image_name, image_type, description, is_main, upload_time, status from product_images where product_id = ? order by is_main desc, image_id asc;
+
+-- 按图片编号查询图片
+select * from product_images where image_id = ? limit 1;
+
+-- 将某产品的全部图片取消主图
+update product_images set is_main = 0 where product_id = ?;
+
+-- 将某张图片设置为主图并启用
+update product_images set is_main = 1, status = 1 where image_id = ?;
+
+-- 新增产品图片
+insert into product_images (product_id, image_url, image_name, image_type, description, is_main, upload_time, status) values (?, ?, ?, ?, ?, ?, now(), ?);
+
+-- 修改产品图片信息
+update product_images set image_url = ?, image_name = ?, image_type = ?, description = ?, is_main = ?, status = ? where image_id = ?;
+
+-- 删除某产品的全部图片
+delete from product_images where product_id = ?;
+
+-- 删除某张产品图片
+delete from product_images where image_id = ?;
+
+-- 查询某产品的配置列表
+select spec_id, product_id, spec_name, spec_value, sort_order, status from product_specs where product_id = ? order by sort_order asc, spec_id asc;
+
+-- 按配置编号查询配置
+select * from product_specs where spec_id = ? limit 1;
+
+-- 新增产品配置
+insert into product_specs (product_id, spec_name, spec_value, sort_order, status) values (?, ?, ?, ?, ?);
+
+-- 修改产品配置
+update product_specs set spec_name = ?, spec_value = ?, sort_order = ?, status = ? where spec_id = ?;
+
+-- 删除某产品的全部配置
+delete from product_specs where product_id = ?;
+
+-- 删除单条产品配置
+delete from product_specs where spec_id = ?;
+
+-- 查询分类是否存在
+select category_id from categories where category_id = ? limit 1;
+
+-- 查询某分类的子分类
+select category_id from categories where parent_id = ?;
+
+-- 查询启用状态的分类列表，供前台筛选使用
+select category_id, category_name, parent_id, description, sort_order, icon, status from categories where status = 1 order by sort_order asc, category_id asc;
+
+-- 查询全部分类列表，供后台管理使用
+select category_id, category_name, parent_id, description, sort_order, icon, status from categories order by sort_order asc, category_id asc;
+
+-- 按分类编号查询分类
+select * from categories where category_id = ? limit 1;
+
+-- 新增分类
+insert into categories (category_name, parent_id, description, sort_order, icon, status) values (?, ?, ?, ?, ?, ?);
+
+-- 修改分类
+update categories set category_name = ?, parent_id = ?, description = ?, sort_order = ?, icon = ?, status = ? where category_id = ?;
+
+-- 启用或禁用分类
+update categories set status = ? where category_id = ?;
+
+-- 删除分类
+delete from categories where category_id = ?;
+
+-- 查询品牌是否存在，并取出 logo 地址
+select brand_id, logo from brands where brand_id = ? limit 1;
+
+-- 查询启用状态的品牌列表，供前台筛选使用
+select brand_id, brand_name, logo, country, website, description, status from brands where status = 1 order by brand_name asc;
+
+-- 查询全部品牌列表，供后台管理使用
+select brand_id, brand_name, logo, country, website, description, status from brands order by brand_id asc;
+
+-- 按品牌编号查询品牌
+select * from brands where brand_id = ? limit 1;
+
+-- 新增品牌
+insert into brands (brand_name, logo, country, website, description, status) values (?, ?, ?, ?, ?, ?);
+
+-- 修改品牌
+update brands set brand_name = ?, logo = ?, country = ?, website = ?, description = ?, status = ? where brand_id = ?;
+
+-- 启用或禁用品牌
+update brands set status = ? where brand_id = ?;
+
+-- 删除品牌
+delete from brands where brand_id = ?;
+
+-- 查询某产品下的评论编号，用于删除产品时清理评论
+select comment_id from comments where product_id = ?;
+
+-- 查询评论是否存在
+select comment_id from comments where comment_id = ? limit 1;
+
+-- 查询某用户的评论编号，用于删除用户时清理评论
+select comment_id from comments where user_id = ?;
+
+-- 新增评论
+insert into comments (user_id, product_id, content, rating, comment_time, like_count, reply_count, status) values (?, ?, ?, ?, now(), 0, 0, 1);
+
+-- 修改自己的评论
+update comments set content = ?, rating = ?, comment_time = now() where comment_id = ? and user_id = ?;
+
+-- 启用、隐藏评论
+update comments set status = ? where comment_id = ?;
+
+-- 管理员删除评论
+delete from comments where comment_id = ?;
+
+-- 用户删除自己的评论
+delete from comments where comment_id = ? and user_id = ?;
+
+-- 管理员登录时按账号查询管理员
+select admin_id, admin_account, admin_password, email, role, status from admin where admin_account = ? limit 1;
+
+-- 查询所有普通管理员
+select admin_id, admin_account, email, role, status from admin where role = ? order by admin_id asc;
+
+-- 按编号查询普通管理员
+select admin_id, admin_account, email, role, status from admin where admin_id = ? and role = ? limit 1;
+
+-- 检查管理员账号是否重复
+select admin_id from admin where admin_account=? limit 1;
+
+-- 生成新的管理员编号
+select coalesce(max(admin_id), 0) + 1 as next_id from admin;
+
+-- 新增普通管理员
+insert into admin (admin_id, admin_account, admin_password, email, role, status) values (?, ?, ?, ?, ?, ?);
+
+-- 启用或禁用普通管理员
+update admin set status = ? where admin_id = ? and role = ?;
+
+-- 删除普通管理员
+delete from admin where admin_id = ? and role = ?;
+
+-- 删除某产品的收藏记录
+delete from favorites where product_id = ?;
+
+-- 删除某用户的收藏记录
+delete from favorites where user_id = ?;
+
+-- 删除某用户对某产品的收藏
+delete from favorites where user_id = ? and product_id = ?;
+
+-- 新增收藏，已收藏则恢复并更新时间
+insert into favorites (user_id, product_id, favorite_time, status) values (?, ?, now(), 1) on duplicate key update favorite_time = now(), status = 1;
