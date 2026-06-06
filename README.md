@@ -865,6 +865,8 @@ values
 
 ![image-20260605224600006](README.assets/image-20260605224600006.png)
 
+![image-20260606111735439](README.assets/image-20260606111735439.png)
+
 点击编辑，即可进行修改
 
 ![image-20260605224705503](README.assets/image-20260605224705503.png)
@@ -875,11 +877,15 @@ values
 
 ![image-20260605224719314](README.assets/image-20260605224719314.png)
 
+![image-20260606111755199](README.assets/image-20260606111755199.png)
+
 点击删除，即可删除对应的分类
 
 ![image-20260605224743234](README.assets/image-20260605224743234.png)
 
 ![image-20260605224800593](README.assets/image-20260605224800593.png)
+
+![image-20260606111801467](README.assets/image-20260606111801467.png)
 
 ##### 6.6.1.3 品牌信息管理
 
@@ -899,9 +905,13 @@ values
 
 ![image-20260605233928438](README.assets/image-20260605233928438.png)
 
+![image-20260606111926932](README.assets/image-20260606111926932.png)
+
 点击状态按钮，即可禁用
 
 ![image-20260605234019257](README.assets/image-20260605234019257.png)
+
+![image-20260606111946823](README.assets/image-20260606111946823.png)
 
 点击编辑，即可改动数据
 
@@ -914,6 +924,8 @@ values
 ![image-20260605234143843](README.assets/image-20260605234143843.png)
 
 ![image-20260605234201509](README.assets/image-20260605234201509.png)
+
+![image-20260606111954957](README.assets/image-20260606111954957.png)
 
 ##### 6.6.1.4 产品信息管理
 
@@ -929,9 +941,11 @@ values
 
 ![image-20260606000001927](README.assets/image-20260606000001927.png)
 
-点击保存，即可在后台看到数据
+点击保存，即可在看到数据
 
 ![image-20260606000033503](README.assets/image-20260606000033503.png)
+
+![image-20260606112200820](README.assets/image-20260606112200820.png)
 
 点击编辑，即可编辑数据
 
@@ -951,7 +965,9 @@ values
 
 输入对应的配置，即可添加
 
-![image-20260606010321757](README.assets/image-20260606010321757.png)
+![image-20260606112333951](README.assets/image-20260606112333951.png)
+
+![image-20260606112414623](README.assets/image-20260606112414623.png)
 
 点击编辑，即可编辑对应配置
 

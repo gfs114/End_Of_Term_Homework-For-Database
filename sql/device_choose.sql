@@ -945,23 +945,6 @@ update admin set status = ? where admin_id = ? and role = ?;
 -- 删除普通管理员
 delete from admin where admin_id = ? and role = ?;
 
--- 删除管理员与分类的关联
-delete from admin_category where category_id = ?;
-delete from admin_category where admin_id = ?;
-
--- 删除管理员与品牌的关联
-delete from admin_brand where brand_id = ?;
-delete from admin_brand where admin_id = ?;
-
--- 删除管理员与产品的关联
-delete from admin_product where product_id = ?;
-delete from admin_product where admin_id = ?;
-
--- 删除管理员与评论的关联
-delete from admin_comment where comment_id = ?;
-delete from admin_comment where admin_id = ?;
-
-
 -- 删除某产品的收藏记录
 delete from favorites where product_id = ?;
 
