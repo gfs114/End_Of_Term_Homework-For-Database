@@ -829,17 +829,38 @@ values
 
 #### 6.6.1 管理员功能
 
-##### 6.6.1.1 用户管理
+##### 6.6.1.1 管理员登录
+
+```sql
+select * from admin where admin_account=? limit 1;
+```
+
+##### 6.6.1.2 用户管理
 
 首先先添加一个用户名为zewei的数据，如图
 
 ![image-20260604205054543](README.assets/image-20260604205054543.png)
 
+```sql
+insert into users
+values(?,?,?,?,?,now());
+```
+
 添加完成后，在管理员系统即可看到对应用户信息![image-20260604205451916](README.assets/image-20260604205451916.png)
+
+```sql
+select * from users order by user_id;
+```
+
+
 
 选择对应用户关闭按钮，即可实现状态的切换
 
 ![image-20260604205911879](README.assets/image-20260604205911879.png)
+
+```sql
+update users set status=? where user_id=?;
+```
 
 点击编辑，即可对用户执行修改信息操作
 
@@ -847,17 +868,34 @@ values
 
 ![image-20260604210039063](README.assets/image-20260604210039063.png)
 
+```sql
+update users
+set username=?,phone=?,email=?,password=?,status=?,gender=?
+where user_id=?;
+```
+
 点击删除，即可对用户进行删除操作
 
 ![image-20260605223644182](README.assets/image-20260605223644182.png)
 
 ![image-20260605223659632](README.assets/image-20260605223659632.png)
 
-##### 6.6.1.2 产品分类管理
+```sql
+delete from users where user_id=?;
+```
+
+##### 6.6.1.3 产品分类管理
 
 点击产品分类，即可进入产品分类页面
 
 ![image-20260605224401867](README.assets/image-20260605224401867.png)
+
+```sql
+select category_id, category_name, description
+from categories
+where status = 1
+order by sort_order asc, category_id asc
+```
 
 点击新增分类，即可添加新的分类
 
@@ -867,9 +905,18 @@ values
 
 ![image-20260606111735439](README.assets/image-20260606111735439.png)
 
+```swl
+insert into categories (category_name, parent_id, description, sort_order, icon, status) values (?, ?, ?, ?, ?, ?);
+```
+
 点击编辑，即可进行修改
 
 ![image-20260605224705503](README.assets/image-20260605224705503.png)
+
+```sql
+update categories 
+set category_name = ?, parent_id = ?, description = ?, sort_order = ?, icon = ?, status = ? where category_id = ?;
+```
 
 点击状态，即可切换目前的状态
 
@@ -879,6 +926,12 @@ values
 
 ![image-20260606111755199](README.assets/image-20260606111755199.png)
 
+```sql
+update categories 
+set status = ? 
+where category_id = ?;
+```
+
 点击删除，即可删除对应的分类
 
 ![image-20260605224743234](README.assets/image-20260605224743234.png)
@@ -887,11 +940,19 @@ values
 
 ![image-20260606111801467](README.assets/image-20260606111801467.png)
 
-##### 6.6.1.3 品牌信息管理
+```sql
+delete from categories where category_id = ?;
+```
+
+##### 6.6.1.4 品牌信息管理
 
 点击产品管理，即可看到所有品牌
 
 ![image-20260605224917368](README.assets/image-20260605224917368.png)
+
+```sql
+select * from brands
+```
 
 点击新增品牌，即可添加品牌
 
@@ -907,17 +968,32 @@ values
 
 ![image-20260606111926932](README.assets/image-20260606111926932.png)
 
+```sql
+insert into brands (brand_name, logo, country, website, description, status) 
+values (?, ?, ?, ?, ?, ?);
+```
+
+
+
 点击状态按钮，即可禁用
 
 ![image-20260605234019257](README.assets/image-20260605234019257.png)
 
 ![image-20260606111946823](README.assets/image-20260606111946823.png)
 
+```sql
+update brands set status = ? where brand_id = ?;
+```
+
 点击编辑，即可改动数据
 
 ![image-20260605234102592](README.assets/image-20260605234102592.png)
 
 ![image-20260605234121887](README.assets/image-20260605234121887.png)
+
+```sql
+update brands set status = ? where brand_id = ?;
+```
 
 点击删除，即可删除对应品牌
 
@@ -927,13 +1003,44 @@ values
 
 ![image-20260606111954957](README.assets/image-20260606111954957.png)
 
-##### 6.6.1.4 产品信息管理
+```sql
+delete from brands where brand_id = ?;
+```
+
+##### 6.6.1.5 产品信息管理
 
 点击设备信息，即可选择所需要的设备进行查询
 
 ![image-20260605234314246](README.assets/image-20260605234314246.png)
 
 ![image-20260605234327285](README.assets/image-20260605234327285.png)
+
+```sql
+select
+  p.product_id,
+  p.product_name,
+  p.price,
+  p.description,
+  p.view_count,
+  p.status,
+  c.category_id,
+  c.category_name,
+  b.brand_id,
+  b.brand_name,
+  b.logo as brand_logo,
+  pi.image_url
+from products p
+inner join categories c on c.category_id = p.category_id
+inner join brands b on b.brand_id = p.brand_id
+left join (
+  select product_id, min(image_url) as image_url
+  from product_images
+  where is_main = 1 and status = 1
+  group by product_id
+) pi on pi.product_id = p.product_id
+where p.category_id = ?
+order by p.product_id asc
+```
 
 这里以手机为例
 
@@ -947,9 +1054,21 @@ values
 
 ![image-20260606112200820](README.assets/image-20260606112200820.png)
 
+```sql
+insert into products
+ (product_name, category_id, brand_id, price, description, view_count, release_time, status)
+values (?, ?, ?, ?, ?, 0, now(), ?)
+```
+
 点击编辑，即可编辑数据
 
 ![image-20260606000237214](README.assets/image-20260606000237214.png)
+
+```sql
+update products
+set product_name = ?, category_id = ?, brand_id = ?, price = ?, description = ?, status = ?
+where product_id = ?
+```
 
 点击删除，即可删除对应数据
 
@@ -957,11 +1076,19 @@ values
 
 ![image-20260606010140653](README.assets/image-20260606010140653.png)
 
-##### 6.6.1.5 配置信息管理
+```sql
+delete from products where product_id = ?	
+```
 
-在对应设备信息中，点击配置即可添加配置
+##### 6.6.1.6 配置信息管理
+
+在对应设备信息中，点击配置即可查看配置
 
 ![image-20260606010227511](README.assets/image-20260606010227511.png)
+
+```sql
+select * from product_specs where spec_id = ? limit 1;
+```
 
 输入对应的配置，即可添加
 
@@ -975,11 +1102,21 @@ values
 
 ![image-20260606010417404](README.assets/image-20260606010417404.png)
 
+```sql
+update product_specs 
+set spec_name = ?, spec_value = ?, sort_order = ?, status = ? 
+where spec_id = ?;
+```
+
 点击删除即可删除对应配置
 
 ![image-20260606010538790](README.assets/image-20260606010538790.png)
 
-##### 6.6.1.6 产品图片管理
+```sql
+delete from product_specs where spec_id = ?;
+```
+
+##### 6.6.1.7 产品图片管理
 
 还是以手机为例
 
@@ -987,27 +1124,59 @@ values
 
 ![image-20260606010617476](README.assets/image-20260606010617476.png)
 
+```sql
+select image_id, product_id, image_url, image_name, image_type, description, is_main, upload_time, status 
+from product_images 
+where product_id = ? 
+order by is_main desc, image_id asc;
+```
+
 上传图片，即可
 
 ![image-20260606010656525](README.assets/image-20260606010656525.png)
+
+```sql
+insert into product_images (product_id, image_url, image_name, image_type, description, is_main, upload_time, status) 
+values (?, ?, ?, ?, ?, ?, now(), ?);
+```
 
 并且可以设置主图，点击主图即可替换
 
 ![image-20260606010731390](README.assets/image-20260606010731390.png)
 
+```sql
+update product_images 
+set is_main = 1, status = 1 
+where image_id = ?;
+```
+
 点击删除即可删除对应图片
 
 ![image-20260606010754446](README.assets/image-20260606010754446.png)
 
-##### 6.6.1.7 评论管理
+```sql
+delete from product_images where image_id = ?;
+```
+
+##### 6.6.1.8 评论管理
 
 选择评论管理，即可查看对应评论
 
 ![image-20260606010821352](README.assets/image-20260606010821352.png)
 
+```sql
+select * from comments
+```
+
 点击隐藏，即可隐藏对应商品的评论![image-20260606010859270](README.assets/image-20260606010859270.png)
 
 ![image-20260606011046505](README.assets/image-20260606011046505.png)
+
+```sql
+update comments 
+set status = ? 
+where comment_id = ?;
+```
 
 点击删除，即可删除对应的评论![image-20260606010916983](README.assets/image-20260606010916983.png)
 
@@ -1015,11 +1184,20 @@ values
 
 ![image-20260606011026760](README.assets/image-20260606011026760.png)
 
+```sql
+delete from comments where comment_id = ?;
+```
+
 #### 6.6.2 用户功能
 
 ##### 6.6.2.1 用户登录与注册
 
 点击注册，即可进入注册页面![image-20260606014409970](README.assets/image-20260606014409970.png)
+
+```sql
+insert into users
+values(?,?,?,?,?,now());
+```
 
 点击注册，即可注册账号![image-20260606014426279](README.assets/image-20260606014426279.png)
 
@@ -1068,6 +1246,12 @@ values
 进入详情，在用户评分与评论中输入自己想要的评论即可
 
 ![image-20260606015109363](README.assets/image-20260606015109363.png)
+
+点击删除按钮即可删除
+
+```sql
+delete from comments where comment_id = ? and user_id = ?;
+```
 
 ## 7.数据库运行与维护
 
