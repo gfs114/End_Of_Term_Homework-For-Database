@@ -136,6 +136,18 @@ create table admin_comment (
     foreign key (admin_id) references admin(admin_id),
     foreign key (comment_id) references comments(comment_id)
 ) engine=innodb;
+create table product_specs (
+  spec_id int not null auto_increment,
+  product_id int not null,
+  spec_name varchar(50) not null,
+  spec_value varchar(255) not null,
+  sort_order int not null default 0,
+  status int not null default 1,
+  primary key (spec_id),
+  unique index uk_product_spec_name (product_id, spec_name),
+  index idx_product_specs_product_id (product_id),
+  foreign key (product_id) references products(product_id) on delete cascade
+) engine=innodb;
 -- 添加种类
 insert into categories (category_name,parent_id,description,sort_order,status)
 values('手机',null,'手机类数码产品',1,1),('电脑',null,'电脑类数码产品',2,1);
@@ -581,22 +593,22 @@ values
   1
 );
 
--- 查询用户
+-- 查询用户（以gin为例）
 select user_id,username,password,phone,email,gender,status,register_time
 from users
-where username= ? or email=?
+where username= 'gin' or email='cole36620@gmail.com'
 limit 1;
 
--- 根据user_id查询用户
+-- 根据user_id查询用户（以gin为例）
 select user_id,username,password,phone,email,gender,status,register_time
 from users
-where user_id= ?
+where user_id= 114510
 limit 1;
 
--- 判断用户信息是否有重复
+-- 判断用户信息是否有重复（以gin为例）
 select user_id,username,phone,email
 from users
-where username=? or phone= ? or email=?
+where username='gin' or phone= '15860827759' or email='cole36620@gmail.com'
 limit 1;
 
 -- 获取所有用户列表
@@ -604,41 +616,41 @@ select *
 from users
 order by user_id;
 
--- 创建用户
+-- 创建用户(以man为例)
 insert into users
-values(?,?,?,?,?,now());
+values('man','654321','15911455145','manbaout@114.com','男',now());
 
--- 更改用户信息
+-- 更改用户信息（以man修改邮箱为例）
 update users
-set username=?,phone=?,email=?,password=?,status=?,gender=?
-where user_id=?;
+set email='514@outlook.com'
+where user_id=114532;
 
--- 重置密码
+-- 重置密码(以man为例)
 update users
-set password=?
-where user_id=?;
+set password='123456'
+where user_id=114532;
 
--- 更改用户状态
+-- 更改用户状态(以修改man状态为例)
 update users
-set status=?
-where user_id=?;
+set status=0
+where user_id=114532;
 
--- 删除用户
+-- 删除用户（以删除man用户为例）
 delete from users
-where user_id=?;
+where user_id=114532;
 
--- 管理员登录
+-- 管理员登录（以admin1登录为例）
 select * from admin
-where admin_account=?
+where admin_account='admin1'
 limit 1;
 
--- 根据id查找产品
+-- 根据id查找产品(以查找HUAWEI Mate 80 RS 非凡大师为例)
 select *
 from products
-where product_id = ?
+where product_id = 11
 limit 1;
 
--- 前台产品列表
+-- 前台产品列表(以展示苹果为例)
 select
   p.product_id,
   p.product_name,
@@ -662,14 +674,14 @@ left join (
   group by product_id
 ) pi on pi.product_id = p.product_id
 where p.status = 1 and c.status = 1 and b.status = 1
-and (p.product_name like ? or p.description like ? or b.brand_name like ?)
-and p.category_id = ?
-and p.brand_id in (?, ?, ...)
-and p.price >= ?
-and p.price <= ?
-order by p.view_count desc, p.product_id asc
+and (p.product_name like '%Apple%' or p.description like '%Apple%' or b.brand_name like '%Apple%')
+and p.category_id = 1
+and p.brand_id in (1, 2, 3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,39)
+and p.price >= 0
+and p.price <= 99999
+order by p.view_count desc, p.product_id asc;
 
--- 后台产品列表
+-- 后台产品列表（以手机为例）
 select
   p.product_id,
   p.product_name,
@@ -692,48 +704,43 @@ left join (
   where is_main = 1 and status = 1
   group by product_id
 ) pi on pi.product_id = p.product_id
-where p.category_id = ?
-order by p.product_id asc
+where p.category_id = 1
+order by p.product_id asc;
 
--- 新增设备
+-- 新增设备(以添加HUAWEI Pura X Max为例)
 insert into products
- (product_name, category_id, brand_id, price, description, view_count, release_time, status)
-values (?, ?, ?, ?, ?, 0, now(), ?)
+  (product_name, category_id, brand_id, price, description, view_count, release_time, status)
+values
+  ('HUAWEI Pura X Max', 1, 1, 10999.00, '阔折叠新成员，双面阔型屏，麒麟9030 Pro芯片，5300mAh电池，IP58级防水', 0, now(), 1);
 
--- 完整更新设备信息
+-- 完整更新设备信息(以更新HUAWEI Pura X Max价格为例)
 update products
-set product_name = ?, category_id = ?, brand_id = ?, price = ?, description = ?, status = ?
-where product_id = ?
+set price = 12999
+where product_id = 139;
 
--- 切换启用/禁用状态
-update products set status = ? where product_id = ?
+-- 切换启用/禁用状态(以切换HUAWEI Pura X Max状态为例)
+update products set status = 0 where product_id = 139;
 
--- 删除设备
-delete from products where product_id = ?
+-- 删除设备(以删除HUAWEI Pura X Max状态为例)
+delete from products where product_id = 139;
 
 -- 查询分类
 select category_id, category_name, description
 from categories
 where status = 1
-order by sort_order asc, category_id asc
+order by sort_order asc, category_id asc;
 
 -- 查询品牌
 select brand_id, brand_name, logo, country
 from brands
 where status = 1
-order by brand_name asc
+order by brand_name asc;
 
 -- 查询产品图片
 select product_id, min(image_url) as image_url
 from product_images
 where is_main = 1 and status = 1
-group by product_id
-
--- 检查 comments 表是否已有 rating 评分字段
-show columns from comments like 'rating';
-
--- 给 comments 表添加 rating 评分字段
-alter table comments add column rating tinyint not null default 5 after content;
+group by product_id;
 
 -- 检查 favorites 表 favorite_id 是否存在
 show columns from favorites like 'favorite_id';
@@ -745,217 +752,356 @@ alter table favorites modify favorite_id int not null auto_increment;
 select p.product_id, p.description from products p where p.description is not null and not exists (select 1 from product_specs ps where ps.product_id = p.product_id);
 
 -- 根据产品描述初始化产品配置，重复配置会忽略
-insert ignore into product_specs (product_id, spec_name, spec_value, sort_order, status) values (?, ?, ?, ?, 1);
+insert ignore into product_specs (product_id, spec_name, spec_value, sort_order, status)
+values (1, '处理器', '麒麟9000S', 1, 1);
 
 -- 按用户名或邮箱查询普通用户，用于登录
-select user_id, username, password, phone, email, gender, status, register_time from users where username = ? or email = ? limit 1;
+select user_id, username, password, phone, email, gender, status, register_time
+from users
+where username = 'gin' or email = 'cole36620@gmail.com'
+limit 1;
 
 -- 按用户编号查询普通用户详情
-select user_id, username, password, phone, email, gender, status, register_time from users where user_id = ? limit 1;
+select user_id, username, password, phone, email, gender, status, register_time
+from users
+where user_id = 114510
+limit 1;
 
 -- 检查用户名、手机号、邮箱是否已被占用
-select user_id, username, phone, email from users where username = ? or phone = ? or email = ? limit 1;
+select user_id, username, phone, email
+from users
+where username = 'man' or phone = '15911455145' or email = 'manbaout@114.com'
+limit 1;
 
 -- 新增普通用户
-insert into users (username, password, phone, email, gender, status, register_time) values (?, ?, ?, ?, ?, ?, now());
+insert into users (username, password, phone, email, gender, status, register_time)
+values ('man', '654321', '15911455145', 'manbaout@114.com', '男', 1, now());
 
 -- 修改普通用户基础信息和密码
-update users set username = ?, phone = ?, email = ?, gender = ?, password = ?, status = ? where user_id = ?;
+update users
+set username = 'man', phone = '15911455145', email = 'manbaout@114.com', gender = '男', password = '654321', status = 1
+where user_id = 114532;
 
 -- 重置普通用户密码
-update users set password = ? where user_id = ?;
+update users
+set password = '123456'
+where user_id = 114532;
 
 -- 启用或禁用普通用户
-update users set status = ? where user_id = ?;
+update users
+set status = 0
+where user_id = 114532;
 
 -- 删除普通用户
-delete from users where user_id = ?;
+delete from users
+where user_id = 114532;
 
 -- 按产品编号查询产品基础信息
-select product_id, product_name, category_id, brand_id, price, description, view_count, status from products where product_id = ? limit 1;
+select product_id, product_name, category_id, brand_id, price, description, view_count, status
+from products
+where product_id = 1
+limit 1;
 
 -- 查询产品所属分类名称，用于判断图片保存到 phone_image 还是 computer_image
-select c.category_name from products p left join categories c on p.category_id = c.category_id where p.product_id = ? limit 1;
+select c.category_name
+from products p
+left join categories c on p.category_id = c.category_id
+where p.product_id = 1
+limit 1;
 
 -- 判断产品是否存在
-select product_id from products where product_id = ? limit 1;
+select product_id
+from products
+where product_id = 1
+limit 1;
 
 -- 查询某分类下的产品
-select product_id from products where category_id = ?;
+select product_id
+from products
+where category_id = 1;
 
 -- 查询某品牌下的产品
-select product_id from products where brand_id = ?;
+select product_id
+from products
+where brand_id = 1;
 
 -- 产品详情访问量加一
-update products set view_count = view_count + 1 where product_id = ?;
+update products
+set view_count = view_count + 1
+where product_id = 1;
 
 -- 启用或禁用产品
-update products set status = ? where product_id = ?;
+update products
+set status = 0
+where product_id = 1;
 
 -- 新增产品
-insert into products (product_name, category_id, brand_id, price, description, view_count, release_time, status) values (?, ?, ?, ?, ?, 0, now(), ?);
+insert into products (product_name, category_id, brand_id, price, description, view_count, release_time, status)
+values ('新品手机', 1, 1, 3999.00, '新品手机描述信息', 0, now(), 1);
 
 -- 修改产品基础信息
-update products set product_name = ?, category_id = ?, brand_id = ?, price = ?, description = ?, status = ? where product_id = ?;
+update products
+set product_name = '新品手机', category_id = 1, brand_id = 1, price = 3999.00, description = '更新后的描述', status = 1
+where product_id = 1;
 
 -- 删除产品
-delete from products where product_id = ?;
+delete from products
+where product_id = 1;
 
 -- 查询产品图片地址，用于删除产品时清理上传文件
-select image_url from product_images where product_id = ?;
+select image_url
+from product_images
+where product_id = 1;
 
 -- 查询某产品的全部图片
-select image_id, product_id, image_url, image_name, image_type, description, is_main, upload_time, status from product_images where product_id = ? order by is_main desc, image_id asc;
+select image_id, product_id, image_url, image_name, image_type, description, is_main, upload_time, status
+from product_images
+where product_id = 1
+order by is_main desc, image_id asc;
 
 -- 按图片编号查询图片
-select * from product_images where image_id = ? limit 1;
+select *
+from product_images
+where image_id = 1
+limit 1;
 
 -- 将某产品的全部图片取消主图
-update product_images set is_main = 0 where product_id = ?;
+update product_images
+set is_main = 0
+where product_id = 1;
 
 -- 将某张图片设置为主图并启用
-update product_images set is_main = 1, status = 1 where image_id = ?;
+update product_images
+set is_main = 1, status = 1
+where image_id = 1;
 
 -- 新增产品图片
-insert into product_images (product_id, image_url, image_name, image_type, description, is_main, upload_time, status) values (?, ?, ?, ?, ?, ?, now(), ?);
+insert into product_images (product_id, image_url, image_name, image_type, description, is_main, upload_time, status)
+values (1, 'phone_image/new.jpg', 'new.jpg', 'jpg', '新品图片', 1, now(), 1);
 
 -- 修改产品图片信息
-update product_images set image_url = ?, image_name = ?, image_type = ?, description = ?, is_main = ?, status = ? where image_id = ?;
+update product_images
+set image_url = 'phone_image/new.jpg', image_name = 'new.jpg', image_type = 'jpg', description = '更新后的图片', is_main = 1, status = 1
+where image_id = 1;
 
 -- 删除某产品的全部图片
-delete from product_images where product_id = ?;
+delete from product_images
+where product_id = 1;
 
 -- 删除某张产品图片
-delete from product_images where image_id = ?;
+delete from product_images
+where image_id = 1;
 
 -- 查询某产品的配置列表
-select spec_id, product_id, spec_name, spec_value, sort_order, status from product_specs where product_id = ? order by sort_order asc, spec_id asc;
+select spec_id, product_id, spec_name, spec_value, sort_order, status
+from product_specs
+where product_id = 1
+order by sort_order asc, spec_id asc;
 
 -- 按配置编号查询配置
-select * from product_specs where spec_id = ? limit 1;
+select *
+from product_specs
+where spec_id = 1
+limit 1;
 
 -- 新增产品配置
-insert into product_specs (product_id, spec_name, spec_value, sort_order, status) values (?, ?, ?, ?, ?);
+insert into product_specs (product_id, spec_name, spec_value, sort_order, status)
+values (1, '处理器', '麒麟9000S', 1, 1);
 
 -- 修改产品配置
-update product_specs set spec_name = ?, spec_value = ?, sort_order = ?, status = ? where spec_id = ?;
+update product_specs
+set spec_name = '处理器', spec_value = '麒麟9010', sort_order = 1, status = 1
+where spec_id = 1;
 
 -- 删除某产品的全部配置
-delete from product_specs where product_id = ?;
+delete from product_specs
+where product_id = 1;
 
 -- 删除单条产品配置
-delete from product_specs where spec_id = ?;
+delete from product_specs
+where spec_id = 1;
 
 -- 查询分类是否存在
-select category_id from categories where category_id = ? limit 1;
+select category_id
+from categories
+where category_id = 1
+limit 1;
 
 -- 查询某分类的子分类
-select category_id from categories where parent_id = ?;
+select category_id
+from categories
+where parent_id = 1;
 
 -- 查询启用状态的分类列表，供前台筛选使用
-select category_id, category_name, parent_id, description, sort_order, icon, status from categories where status = 1 order by sort_order asc, category_id asc;
+select category_id, category_name, parent_id, description, sort_order, icon, status
+from categories
+where status = 1
+order by sort_order asc, category_id asc;
 
 -- 查询全部分类列表，供后台管理使用
-select category_id, category_name, parent_id, description, sort_order, icon, status from categories order by sort_order asc, category_id asc;
+select category_id, category_name, parent_id, description, sort_order, icon, status
+from categories
+order by sort_order asc, category_id asc;
 
 -- 按分类编号查询分类
-select * from categories where category_id = ? limit 1;
+select *
+from categories
+where category_id = 1
+limit 1;
 
 -- 新增分类
-insert into categories (category_name, parent_id, description, sort_order, icon, status) values (?, ?, ?, ?, ?, ?);
+insert into categories (category_name, parent_id, description, sort_order, icon, status)
+values ('平板电脑', null, '平板电脑类产品', 3, null, 1);
 
 -- 修改分类
-update categories set category_name = ?, parent_id = ?, description = ?, sort_order = ?, icon = ?, status = ? where category_id = ?;
+update categories
+set category_name = '平板电脑', parent_id = null, description = '平板电脑类产品', sort_order = 3, icon = null, status = 1
+where category_id = 3;
 
 -- 启用或禁用分类
-update categories set status = ? where category_id = ?;
+update categories
+set status = 0
+where category_id = 3;
 
 -- 删除分类
-delete from categories where category_id = ?;
+delete from categories
+where category_id = 3;
 
 -- 查询品牌是否存在，并取出 logo 地址
-select brand_id, logo from brands where brand_id = ? limit 1;
+select brand_id, logo
+from brands
+where brand_id = 1
+limit 1;
 
 -- 查询启用状态的品牌列表，供前台筛选使用
-select brand_id, brand_name, logo, country, website, description, status from brands where status = 1 order by brand_name asc;
+select brand_id, brand_name, logo, country, website, description, status
+from brands
+where status = 1
+order by brand_name asc;
 
 -- 查询全部品牌列表，供后台管理使用
-select brand_id, brand_name, logo, country, website, description, status from brands order by brand_id asc;
+select brand_id, brand_name, logo, country, website, description, status
+from brands
+order by brand_id asc;
 
 -- 按品牌编号查询品牌
-select * from brands where brand_id = ? limit 1;
+select *
+from brands
+where brand_id = 1
+limit 1;
 
 -- 新增品牌
-insert into brands (brand_name, logo, country, website, description, status) values (?, ?, ?, ?, ?, ?);
+insert into brands (brand_name, logo, country, website, description, status)
+values ('Google', 'brand_icon/Google.png', '美国', 'https://www.google.com/', 'Google 旗下产品', 1);
 
 -- 修改品牌
-update brands set brand_name = ?, logo = ?, country = ?, website = ?, description = ?, status = ? where brand_id = ?;
+update brands
+set brand_name = 'Google', logo = 'brand_icon/Google.png', country = '美国', website = 'https://www.google.com/', description = 'Google 旗下产品', status = 1
+where brand_id = 18;
 
 -- 启用或禁用品牌
-update brands set status = ? where brand_id = ?;
+update brands
+set status = 0
+where brand_id = 18;
 
 -- 删除品牌
-delete from brands where brand_id = ?;
+delete from brands
+where brand_id = 18;
 
 -- 查询某产品下的评论编号，用于删除产品时清理评论
-select comment_id from comments where product_id = ?;
+select comment_id
+from comments
+where product_id = 1;
 
 -- 查询评论是否存在
-select comment_id from comments where comment_id = ? limit 1;
+select comment_id
+from comments
+where comment_id = 1
+limit 1;
 
 -- 查询某用户的评论编号，用于删除用户时清理评论
-select comment_id from comments where user_id = ?;
+select comment_id
+from comments
+where user_id = 114510;
 
 -- 新增评论
-insert into comments (user_id, product_id, content, rating, comment_time, like_count, reply_count, status) values (?, ?, ?, ?, now(), 0, 0, 1);
+insert into comments (user_id, product_id, content, rating, comment_time, like_count, reply_count, status)
+values (114510, 1, '这款手机很好用！', 5, now(), 0, 0, 1);
 
 -- 修改自己的评论
-update comments set content = ?, rating = ?, comment_time = now() where comment_id = ? and user_id = ?;
+update comments
+set content = '更新后的评论内容', rating = 4, comment_time = now()
+where comment_id = 1 and user_id = 114510;
 
 -- 启用、隐藏评论
-update comments set status = ? where comment_id = ?;
+update comments
+set status = 0
+where comment_id = 1;
 
 -- 管理员删除评论
-delete from comments where comment_id = ?;
+delete from comments
+where comment_id = 1;
 
 -- 用户删除自己的评论
-delete from comments where comment_id = ? and user_id = ?;
+delete from comments
+where comment_id = 1 and user_id = 114510;
 
 -- 管理员登录时按账号查询管理员
-select admin_id, admin_account, admin_password, email, role, status from admin where admin_account = ? limit 1;
+select admin_id, admin_account, admin_password, email, role, status
+from admin
+where admin_account = 'admin1'
+limit 1;
 
 -- 查询所有普通管理员
-select admin_id, admin_account, email, role, status from admin where role = ? order by admin_id asc;
+select admin_id, admin_account, email, role, status
+from admin
+where role = '普通管理员'
+order by admin_id asc;
 
 -- 按编号查询普通管理员
-select admin_id, admin_account, email, role, status from admin where admin_id = ? and role = ? limit 1;
+select admin_id, admin_account, email, role, status
+from admin
+where admin_id = 2 and role = '普通管理员'
+limit 1;
 
 -- 检查管理员账号是否重复
-select admin_id from admin where admin_account=? limit 1;
+select admin_id
+from admin
+where admin_account = 'admin1'
+limit 1;
 
 -- 生成新的管理员编号
 select coalesce(max(admin_id), 0) + 1 as next_id from admin;
 
 -- 新增普通管理员
-insert into admin (admin_id, admin_account, admin_password, email, role, status) values (?, ?, ?, ?, ?, ?);
+insert into admin (admin_id, admin_account, admin_password, email, role, status)
+values (21, 'admin21', '123456', 'admin21@qq.com', '普通管理员', 1);
 
 -- 启用或禁用普通管理员
-update admin set status = ? where admin_id = ? and role = ?;
+update admin
+set status = 0
+where admin_id = 2 and role = '普通管理员';
 
 -- 删除普通管理员
-delete from admin where admin_id = ? and role = ?;
+delete from admin
+where admin_id = 2 and role = '普通管理员';
 
 -- 删除某产品的收藏记录
-delete from favorites where product_id = ?;
+delete from favorites
+where product_id = 1;
 
 -- 删除某用户的收藏记录
-delete from favorites where user_id = ?;
+delete from favorites
+where user_id = 114510;
 
 -- 删除某用户对某产品的收藏
-delete from favorites where user_id = ? and product_id = ?;
+delete from favorites
+where user_id = 114510 and product_id = 1;
 
 -- 新增收藏，已收藏则恢复并更新时间
-insert into favorites (user_id, product_id, favorite_time, status) values (?, ?, now(), 1) on duplicate key update favorite_time = now(), status = 1;
+insert into favorites (user_id, product_id, favorite_time, status)
+values (114510, 1, now(), 1)
+on duplicate key update favorite_time = now(), status = 1;
 
 -- 没有主图时自动设置第一张启用图片为主图
 update product_images pi
@@ -978,31 +1124,42 @@ commit;
 rollback;
 
 -- 删除产品对应的管理员产品关联
-delete from admin_product where product_id = ?;
+delete from admin_product
+where product_id = 1;
 
 -- 删除分类对应的管理员分类关联
-delete from admin_category where category_id = ?;
+delete from admin_category
+where category_id = 1;
 
 -- 删除品牌对应的管理员品牌关联
-delete from admin_brand where brand_id = ?;
+delete from admin_brand
+where brand_id = 1;
 
 -- 删除评论对应的管理员评论关联
-delete from admin_comment where comment_id = ?;
+delete from admin_comment
+where comment_id = 1;
 
 -- 根据用户编号检查用户是否存在
-select user_id from users where user_id = ? limit 1;
+select user_id
+from users
+where user_id = 114510
+limit 1;
 
 -- 删除普通管理员对应的分类关联
-delete from admin_category where admin_id = ?;
+delete from admin_category
+where admin_id = 2;
 
 -- 删除普通管理员对应的品牌关联
-delete from admin_brand where admin_id = ?;
+delete from admin_brand
+where admin_id = 2;
 
 -- 删除普通管理员对应的产品关联
-delete from admin_product where admin_id = ?;
+delete from admin_product
+where admin_id = 2;
 
 -- 删除普通管理员对应的评论关联
-delete from admin_comment where admin_id = ?;
+delete from admin_comment
+where admin_id = 2;
 
 -- 检查接口健康状态
 select 1 as ok;
@@ -1013,7 +1170,7 @@ select c.comment_id, c.user_id, u.username, c.product_id, p.product_name, c.cont
 from comments c
 inner join users u on u.user_id = c.user_id
 inner join products p on p.product_id = c.product_id
-where c.product_id = ? and c.status = 1
+where c.product_id = 1 and c.status = 1
 order by c.comment_time desc, c.comment_id desc;
 
 -- 查询我的收藏列表
@@ -1030,7 +1187,7 @@ left join (
   where status = 1
   group by product_id
 ) pi on pi.product_id = p.product_id
-where f.user_id = ? and f.status = 1
+where f.user_id = 114510 and f.status = 1
 order by f.favorite_time desc;
 
 -- 管理员查询用户列表
@@ -1039,16 +1196,28 @@ from users
 order by user_id asc;
 
 -- 批量删除管理员评论关联
-delete from admin_comment where comment_id in (?, ?, ?);
+delete from admin_comment
+where comment_id in (1, 2, 3);
 
 -- 批量删除评论
-delete from comments where comment_id in (?, ?, ?);
+delete from comments
+where comment_id in (1, 2, 3);
 
 -- 修改普通管理员时检查账号是否重复
-select admin_id from admin where admin_account = ? and admin_id <> ? limit 1;
+select admin_id
+from admin
+where admin_account = 'admin1' and admin_id <> 1
+limit 1;
 
 -- 修改普通管理员信息：不改密码
-update admin set admin_account = ?, email = ?, status = ? where admin_id = ? and role = ?;
+update admin
+set admin_account = 'admin2_new', email = 'admin2_new@163.com', status = 1
+where admin_id = 2 and role = '普通管理员';
 
 -- 修改普通管理员信息：同时修改密码
-update admin set admin_account = ?, email = ?, status = ?, admin_password = ? where admin_id = ? and role = ?;
+update admin
+set admin_account = 'admin2_new', email = 'admin2_new@163.com', status = 1, admin_password = 'newpass'
+where admin_id = 2 and role = '普通管理员';
+
+-- 检查接口健康状态
+select 1 as ok;

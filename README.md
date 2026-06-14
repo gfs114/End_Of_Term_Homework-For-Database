@@ -21,8 +21,9 @@
 3. 产品分类信息：包括分类编号、分类名称、父级分类编号、分类描述、排序号、分类图标、分类状态
 4. 品牌信息：包括品牌编号、品牌名称、品牌Logo、所属国家、官方网站、品牌介绍、品牌状态
 5. 产品基本信息：包括产品编号、产品名称、所属分类、所属品牌、产品价格、产品主图、产品简介、浏览量、发布时间、产品状态
-8. 产品图片信息：包括图片编号、产品编号、图片地址、图片名称、图片类型、图片描述、是否主图、上传时间、图片状态
-10. 评论信息：包括评论编号、评论内容、评论时间、点赞数、回复数、评论状态
+6. 产品配置信息：包含配置名称，配置编号，排序号，状态，配置值
+7. 产品图片信息：包括图片编号、产品编号、图片地址、图片名称、图片类型、图片描述、是否主图、上传时间、图片状态
+8. 评论信息：包括评论编号、评论内容、评论时间、点赞数、回复数、评论状态
 
 根据系统信息需求分析，各类数据之间存在如下关系：
 
@@ -31,11 +32,12 @@
 3. 一个管理员可以添加或维护多个产品，一个产品信息由多个管理员进行录入或修改
 4. 一个产品分类下可以包含多个产品，但一个产品只能属于一个分类
 5. 一个品牌可以拥有多个产品，但一个产品只能属于一个品牌
-6. 一个产品可以拥有多张图片，一张图片只能属于一个产品
-7. 一个用户可以收藏多个产品，一个产品也可以被多个用户收藏
-8. 一个用户可以对多个产品发表评论，一个产品可以被多个用户评论
-9. 一个管理员可以管理多条评论信息，一条评论由多个管理员管理
-10. 一个产品拥有多个评论，一个评论对应一个产品
+6. 一个产品有多个配置项，每个配置项只属于一个产品
+7. 一个产品可以拥有多张图片，一张图片只能属于一个产品
+8. 一个用户可以收藏多个产品，一个产品也可以被多个用户收藏
+9. 一个用户可以对多个产品发表评论，一个产品可以被多个用户评论
+10. 一个管理员可以管理多条评论信息，一条评论由多个管理员管理
+11. 一个产品拥有多个评论，一个评论对应一个产品
 
 ### 2.2 处理需求
 
@@ -106,17 +108,18 @@
 3. 一个管理员可以添加或维护多个产品，一个产品信息由多个管理员进行录入或修改
 4. 一个产品分类下可以包含多个产品，但一个产品只能属于一个分类
 5. 一个品牌可以拥有多个产品，但一个产品只能属于一个品牌
-6. 一个产品可以拥有多张图片，一张图片只能属于一个产品
-7. 一个用户可以收藏多个产品，一个产品也可以被多个用户收藏
-8. 一个用户可以对多个产品发表评论，一个产品可以被多个用户评论
-9. 一个管理员可以管理多条评论信息，一条评论由多个管理员管理
-10. 一个产品拥有多个评论，一个评论对应一个产品
+6. 一个产品有多个配置项，每个配置项只属于一个产品
+7. 一个产品可以拥有多张图片，一张图片只能属于一个产品
+8. 一个用户可以收藏多个产品，一个产品也可以被多个用户收藏
+9. 一个用户可以对多个产品发表评论，一个产品可以被多个用户评论
+10. 一个管理员可以管理多条评论信息，一条评论由多个管理员管理
+11. 一个产品拥有多个评论，一个评论对应一个产品
 
 
 
 由以上关系，可以得出如下E-R图
 
-![image-20260601195956512](README.assets/image-20260601195956512.png)
+![image-20260614153553778](README.assets/image-20260614153553778.png)
 
 ## 4.逻辑结构设计
 
@@ -131,6 +134,8 @@
 产品（<u>产品编号</u>，产品名称，<span style="text-decoration: underline wavy;">分类编号</span>，<span style="text-decoration: underline wavy;">品牌编号</span>，产品价格，产品主图，产品简介，浏览量，发布时间，产品状态）
 
 产品图片（<u>图片编号</u>，<span style="text-decoration: underline wavy;">产品编号</span>，图片地址，图片名称，图片类型，图片描述，是否主图，上传时间，图片状态）
+
+产品配置（<u>配置编号</u>，<span style="text-decoration: underline wavy;">产品编号</span>，配置名称，配置值，排序号，状态）
 
 用户（<u>用户编号</u>，用户名，密码，手机号，邮箱，性别，用户状态，注册时间）
 
@@ -156,6 +161,7 @@
 3. 品牌关系中所有非主属性都完全依赖于品牌编号，属于 BCNF
 4. 产品关系中产品名称、分类编号、品牌编号、产品价格、产品简介、浏览量、发布时间、产品状态都依赖于产品编号，属于 BCNF
 5. 产品图片关系中所有非主属性都完全依赖于图片编号，且产品编号作为外键用于表示产品与图片之间的 1:n 关系，属于 BCNF
+6. 产品配置关系中配置名称、配置值、排序号、状态都完全依赖于配置编号，且产品编号作为外键用于表示产品与配置之间的 1:n 关系，属于 BCNF
 6. 用户关系中所有非主属性都完全依赖于用户编号，属于 BCNF
 7. 评论关系中评论内容、评论时间、点赞数、回复数、评论状态都依赖于评论编号，用户编号和产品编号作为外键分别表示用户发表评论、产品拥有评论的关系，属于 BCNF
 8. 管理员分类管理由管理员编号和分类编号两个外键共同组成联合主键，表中不存在非主属性，属于 BCNF
@@ -179,6 +185,8 @@
 产品（<u>产品编号</u>，产品名称，<span style="text-decoration: underline wavy;">分类编号</span>，<span style="text-decoration: underline wavy;">品牌编号</span>，产品价格，产品简介，浏览量，发布时间，产品状态）
 
 产品图片（<u>图片编号</u>，<span style="text-decoration: underline wavy;">产品编号</span>，图片地址，图片名称，图片类型，图片描述，是否主图，上传时间，图片状态）
+
+产品配置（<u>配置编号</u>，<span style="text-decoration: underline wavy;">产品编号</span>，配置名称，配置值，排序号，状态）
 
 用户（<u>用户编号</u>，用户名，密码，手机号，邮箱，性别，用户状态，注册时间）
 
@@ -261,6 +269,19 @@ products
 | status       | int      | 1      | 1        | 否       | 否       | 否       |            | 产品状态                                 |
 
 产品图片表用于存储产品图片信息，其中 image_id 为主键，product_id 为外键，用于表示图片所属产品，is_main 字段表示是否为主图，status 字段表示图片状态。
+
+product_specs
+
+| 字段名     | 数据类型 | 默认值 | 数据长度 | 是否主键 | 是否为空 | 是否外键 | 自定义约束           | 说明               |
+| ---------- | -------- | ------ | -------- | -------- | -------- | -------- | -------------------- | ------------------ |
+| spec_id    | int      |        | 10       | 是       | 否       | 否       | 自增                 | 配置编号           |
+| product_id | int      |        | 10       | 否       | 否       | 否       |                      | 产品编号           |
+| spec_name  | varchar  |        | 50       | 否       | 否       | 否       | 联合唯一(product_id) | 配置名称           |
+| spec_value | varchar  |        | 255      | 否       | 否       | 否       |                      | 配置值             |
+| sort_order | int      | 0      | 10       | 否       | 否       | 否       |                      | 排序号             |
+| status     | int      | 1      | 10       | 否       | 否       | 否       |                      | 状态，1启用，0禁用 |
+
+产品配置表用于存储产品的详细规格参数信息，其中 spec_id 为主键，(product_id, spec_name) 字段设置联合唯一约束，用于保证同一产品下配置名称不重复，status 字段表示配置状态。
 
 product_images
 
@@ -591,7 +612,26 @@ create table admin_comment (
 ) engine=innodb;
 ```
 
-!![image-20260603200657745](README.assets/image-20260603200657745.png)
+![image-20260603200657745](README.assets/image-20260603200657745.png)
+
+product_specs
+
+```sql
+create table product_specs (
+  spec_id int not null auto_increment,
+  product_id int not null,
+  spec_name varchar(50) not null,
+  spec_value varchar(255) not null,
+  sort_order int not null default 0,
+  status int not null default 1,
+  primary key (spec_id),
+  unique index uk_product_spec_name (product_id, spec_name),
+  index idx_product_specs_product_id (product_id),
+  foreign key (product_id) references products(product_id) on delete cascade
+) engine=innodb;
+```
+
+![image-20260607205526148](README.assets/image-20260607205526148.png)
 
 ### 6.3 创建用户
 
@@ -832,7 +872,7 @@ values
 ##### 6.6.1.1 管理员登录
 
 ```sql
-select * from admin where admin_account=? limit 1;
+select * from admin where admin_account=1 limit 1
 ```
 
 ##### 6.6.1.2 用户管理
@@ -842,8 +882,8 @@ select * from admin where admin_account=? limit 1;
 ![image-20260604205054543](README.assets/image-20260604205054543.png)
 
 ```sql
-insert into users
-values(?,?,?,?,?,now());
+insert into users(username, password, phone, email, gender, status, register_time)
+values('zewei','123456987','13055760559','13055760559','男',now(),1);
 ```
 
 添加完成后，在管理员系统即可看到对应用户信息![image-20260604205451916](README.assets/image-20260604205451916.png)
@@ -859,7 +899,7 @@ select * from users order by user_id;
 ![image-20260604205911879](README.assets/image-20260604205911879.png)
 
 ```sql
-update users set status=? where user_id=?;
+update users set status=0 where user_id=114528;
 ```
 
 点击编辑，即可对用户执行修改信息操作
@@ -870,8 +910,8 @@ update users set status=? where user_id=?;
 
 ```sql
 update users
-set username=?,phone=?,email=?,password=?,status=?,gender=?
-where user_id=?;
+set email='masonshi@iclude.com'
+where user_id=114528;
 ```
 
 点击删除，即可对用户进行删除操作
